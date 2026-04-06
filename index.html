@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Green Company – Invoice Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;700&family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   GLOBAL
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --g1: #2D5016; --g2: #3D6B20; --g3: #4A7C2F; --g4: #6B9E45;
+  --g-pale: #EAF3DE; --g-row: #F5F9F2;
+  --border: #CCCCCC; --text: #1A1A1A; --muted: #555555;
+  --rate: 22000;
+}
+body {
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 13px; color: var(--text);
+  background: #E8ECE4;
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+.app-wrap { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 210px; flex-shrink: 0;
+  background: var(--g1);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto;
+}
+.sb-logo {
+  padding: 20px 16px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.sb-logo .lao { font-family:'Noto Sans Lao',sans-serif; font-size:18px; color:#fff; font-weight:700; }
+.sb-logo .eng { font-size:10px; font-style:italic; color:rgba(255,255,255,0.55); margin-top:1px; }
+.sb-logo .co  { font-size:11px; color:rgba(255,255,255,0.7); margin-top:6px; }
+.sb-nav { padding: 10px 0; flex: 1; }
+.sb-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px; cursor: pointer;
+  color: rgba(255,255,255,0.65); font-size: 13px;
+  border-left: 3px solid transparent;
+  transition: background 0.12s, color 0.12s;
+  user-select: none;
+}
+.sb-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.sb-item.active { background: rgba(255,255,255,0.13); color: #fff; border-left-color: #97C459; }
+.sb-item svg { width:15px; height:15px; flex-shrink:0; }
+
+/* ── MAIN ── */
+.main { flex: 1; overflow-y: auto; padding: 28px 32px; }
+
+/* ── PAGES ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── PAGE HEADER ── */
+.ph { margin-bottom: 22px; }
+.ph h1 { font-size: 20px; font-weight: 600; }
+.ph p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+/* ── STATS ── */
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.stat {
+  background: #fff; border-radius: 10px;
+  border: 1px solid #dde8d4; padding: 14px 16px;
+}
+.stat .sl { font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+.stat .sv { font-size: 22px; font-weight: 600; }
+.stat .ss { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ── CARD ── */
+.card {
+  background: #fff; border-radius: 10px;
+  border: 1px solid #dde8d4; padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.ct {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em;
+  padding-bottom: 12px; margin-bottom: 16px;
+  border-bottom: 1px solid #e8edd4;
+}
+
+/* ── FORM ── */
+.fr { display: grid; gap: 12px; margin-bottom: 12px; }
+.fr2 { grid-template-columns: 1fr 1fr; }
+.fr3 { grid-template-columns: 1fr 1fr 1fr; }
+.fr1 { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 11px; font-weight: 600; color: var(--muted); }
+.field input, .field select {
+  border: 1px solid #ccc; border-radius: 6px;
+  padding: 7px 9px; font-size: 12px; font-family: inherit;
+  background: #fff; color: var(--text);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.field input:focus, .field select:focus {
+  outline: none; border-color: var(--g3);
+  box-shadow: 0 0 0 3px rgba(74,124,47,0.12);
+}
+
+/* ── ITEM TABLE ── */
+.itbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.itbl thead tr { background: var(--g2); color: #fff; }
+.itbl th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 11px; }
+.itbl th.r { text-align: right; }
+.itbl td { padding: 5px 4px; border-bottom: 1px solid #eee; vertical-align: middle; }
+.itbl tbody tr:nth-child(even) td { background: var(--g-row); }
+.itbl input, .itbl select {
+  width: 100%; border: 1px solid #ddd; border-radius: 4px;
+  padding: 4px 7px; font-size: 12px; font-family: inherit;
+  background: #fff; color: var(--text);
+}
+.itbl input:focus, .itbl select:focus { outline: none; border-color: var(--g3); }
+.itbl .tc { text-align:right; font-weight:600; color: var(--g1); padding-right:10px; }
+.itbl .dc { text-align:center; }
+.del-btn { background:none; border:none; cursor:pointer; color:#aaa; font-size:13px; padding:2px 6px; }
+.del-btn:hover { color: #c0392b; }
+
+/* ── TOTALS BOX ── */
+.totals { display:flex; flex-direction:column; align-items:flex-end; gap:5px; margin-top:14px; }
+.trow { display:flex; gap:16px; font-size:12px; align-items:center; }
+.trow .tl { color:var(--muted); min-width:160px; text-align:right; }
+.trow .tv { min-width:120px; text-align:right; }
+.trow.grand .tl, .trow.grand .tv { font-size:15px; font-weight:700; color:var(--g1); }
+.trow.usd .tv { font-size:11px; color:var(--muted); }
+.tdiv { width:300px; height:1px; background:#ddd; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 8px 16px; border-radius: 7px; font-size: 13px;
+  cursor: pointer; font-weight: 600; font-family: inherit;
+  border: 1px solid #ccc; background: #fff; color: var(--text);
+  transition: all 0.12s;
+}
+.btn:hover { background: #f0f0f0; }
+.btn-g { background: var(--g1); color: #fff; border-color: var(--g1); }
+.btn-g:hover { background: var(--g2); border-color: var(--g2); }
+.btn-sm { padding: 5px 11px; font-size: 11px; }
+.brow { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
+
+/* ── INVOICE LIST TABLE ── */
+.ltbl { width:100%; border-collapse:collapse; font-size:12px; }
+.ltbl th { text-align:left; padding:9px 12px; background:var(--g-row); font-weight:600; font-size:11px; color:var(--muted); border-bottom:1px solid #dde8d4; }
+.ltbl td { padding:10px 12px; border-bottom:1px solid #f0f0f0; }
+.ltbl tr:hover td { background: var(--g-row); }
+.badge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:10px; font-weight:600; }
+.b-paid    { background:#EAF3DE; color:#3B6D11; }
+.b-pending { background:#FFF3CD; color:#856404; }
+.b-overdue { background:#FDE8E8; color:#9B2C2C; }
+
+/* ── CUSTOMER / PRODUCT LIST ── */
+.lgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.litem { background:#fff; border:1px solid #dde8d4; border-radius:8px; padding:11px 14px; display:flex; justify-content:space-between; align-items:center; }
+.litem .ln { font-weight:600; font-size:13px; }
+.litem .ld { font-size:11px; color:var(--muted); margin-top:2px; }
+.add-row { display:grid; gap:10px; align-items:end; margin-bottom:14px; }
+.add-row3 { grid-template-columns: 1fr 1fr 1fr auto; }
+.add-row2 { grid-template-columns: 1fr 1fr auto; }
+
+/* ═══════════════════════════════════════════
+   INVOICE PRINT TEMPLATE
+   (pixel-perfect match to original PDF)
+═══════════════════════════════════════════ */
+.inv-doc {
+  background: #fff;
+  width: 794px;           /* A4 96dpi */
+  min-height: 1123px;
+  padding: 28px 36px 24px;
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 11px; color: #1A1A1A;
+  border-radius: 10px;
+  border: 1px solid #dde8d4;
+  margin-bottom: 20px;
+}
+
+/* logo + company header */
+.doc-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; }
+.doc-logo-box {
+  background: var(--g1); color: #fff;
+  padding: 10px 16px; border-radius: 8px;
+  min-width: 130px;
+}
+.doc-logo-box .lao { font-family:'Noto Sans Lao',sans-serif; font-size:17px; font-weight:700; }
+.doc-logo-box .tagline { font-size:9px; font-style:italic; opacity:.75; margin-top:1px; }
+.doc-co { font-size:9.5px; color:#333; line-height:1.75; text-align:right; }
+
+/* title bar */
+.doc-title {
+  background: var(--g2); color: #fff;
+  text-align: center; padding: 7px 0;
+  font-size: 20px; font-weight: 700;
+  letter-spacing: .04em; margin-bottom:14px;
+  border-radius: 3px;
+}
+
+/* billing grid */
+.doc-bill { display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; margin-bottom:14px; }
+.doc-field { display:flex; gap:5px; border-bottom:1px solid #DDD; padding-bottom:4px; font-size:10px; }
+.doc-field .fl { font-weight:700; white-space:nowrap; color:#333; }
+.doc-field .fv { color:#555; }
+
+/* item table */
+.doc-tbl { width:100%; border-collapse:collapse; font-size:10px; margin-bottom:10px; }
+.doc-tbl thead tr { background: var(--g2); color:#fff; }
+.doc-tbl th { padding:6px 8px; text-align:left; font-weight:600; font-size:10px; }
+.doc-tbl th.r { text-align:right; }
+.doc-tbl th.c { text-align:center; }
+.doc-tbl td { padding:5px 8px; border-bottom:1px solid #E8E8E8; }
+.doc-tbl td.r { text-align:right; font-weight:600; }
+.doc-tbl td.c { text-align:center; }
+.doc-tbl tbody tr:nth-child(even) td { background:#F5F9F2; }
+
+/* totals */
+.doc-totals { display:flex; flex-direction:column; align-items:flex-end; gap:3px; margin-bottom:14px; }
+.doc-trow { display:flex; gap:12px; font-size:10px; }
+.doc-trow .tl { color:#555; min-width:130px; text-align:right; }
+.doc-trow .tv { min-width:100px; text-align:right; }
+.doc-grand {
+  background: var(--g1); color:#fff;
+  padding:5px 10px; border-radius:4px;
+  display:flex; justify-content:space-between;
+  font-weight:700; font-size:11px; min-width:260px;
+  margin-top:2px;
+}
+.doc-usd { font-size:9px; color:#666; text-align:right; margin-top:3px; }
+
+/* terms */
+.doc-terms { border:1px solid #DDD; padding:9px 10px; border-radius:4px; margin-bottom:12px; }
+.doc-terms .dt { font-weight:700; font-size:10px; margin-bottom:5px; }
+.doc-terms p { font-size:9px; color:#444; line-height:1.65; margin-bottom:2px; }
+
+/* bank */
+.doc-bank { margin-bottom:12px; }
+.doc-bank .dbt { font-weight:700; font-size:10px; margin-bottom:5px; }
+.doc-bank-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.doc-bank-item { font-size:9px; color:#333; line-height:1.7; }
+.doc-bank-item strong { font-size:10px; color:var(--g1); }
+
+/* footer */
+.doc-footer {
+  border-top:2px solid var(--g3); padding-top:8px;
+  text-align:center; font-size:9px; color:#555;
+  line-height:1.8;
+}
+
+/* acknowledgement (delivery note) */
+.doc-ack { margin-top:14px; }
+.doc-ack .dat { font-weight:700; font-size:10px; margin-bottom:4px; }
+.doc-ack .dsub { font-size:9px; color:#444; margin-bottom:12px; }
+.doc-sig-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.doc-sig-block .st { font-weight:700; font-size:10px; color:var(--g1); margin-bottom:8px; }
+.doc-sig-line { font-size:9px; color:#444; margin-bottom:10px; }
+.doc-sig-line span { display:block; border-bottom:1px solid #BBB; margin-top:14px; }
+.doc-copy { font-size:9px; color:#777; text-align:right; margin-bottom:6px; font-style:italic; }
+
+/* ═══════════════════════════════════════════
+   PRINT MEDIA
+═══════════════════════════════════════════ */
+@media print {
+  body { background:#fff; }
+  .app-wrap { display:block; }
+  .sidebar, .non-print { display:none !important; }
+  .main { padding:0; overflow:visible; }
+  .page { display:none !important; }
+  #pg-print { display:block !important; }
+  .inv-doc {
+    width:100%; border:none; border-radius:0;
+    padding:10mm 14mm; margin:0;
+    box-shadow:none;
+  }
+  .brow { display:none; }
+  .page-break { page-break-before: always; }
+}
+</style>
+</head>
+<body>
+<div class="app-wrap">
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="lao">ສົດຈາກຟາມ</div>
+    <div class="eng">Fresh From the Farm</div>
+    <div class="co">The Green Company Ltd.</div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-item active" onclick="nav('dashboard')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+      대시보드
+    </div>
+    <div class="sb-item" onclick="nav('new')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm1 4H7v2H5v2h2v2h2V9h2V7H9V5z"/></svg>
+      새 인보이스
+    </div>
+    <div class="sb-item" onclick="nav('list')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4h12v1.5H2zm0 3h12v1.5H2zm0 3h8v1.5H2z"/></svg>
+      인보이스 목록
+    </div>
+    <div class="sb-item" onclick="nav('customers')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6H2z"/></svg>
+      고객 관리
+    </div>
+    <div class="sb-item" onclick="nav('products')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5l1.5 2H14l-1.5 7H3.5L2 2zm3 9a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm6 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>
+      제품 관리
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main class="main">
+
+<!-- ── 대시보드 ── -->
+<section class="page active" id="pg-dashboard">
+  <div class="ph"><h1>대시보드</h1><p>인보이스 현황 요약</p></div>
+  <div class="stats">
+    <div class="stat"><div class="sl">총 인보이스</div><div class="sv" id="s-total">0</div><div class="ss">건</div></div>
+    <div class="stat"><div class="sl">이번달 매출</div><div class="sv" id="s-month" style="font-size:16px">₭ 0</div><div class="ss">LAK</div></div>
+    <div class="stat"><div class="sl">미결제</div><div class="sv" id="s-pend" style="color:#856404">0</div><div class="ss">건</div></div>
+    <div class="stat"><div class="sl">고객 수</div><div class="sv" id="s-cust">0</div><div class="ss">명</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">최근 인보이스</div>
+    <table class="ltbl">
+      <thead><tr><th>Invoice No.</th><th>고객</th><th>발행일</th><th>금액 (LAK)</th><th>상태</th></tr></thead>
+      <tbody id="dash-tbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── 새 인보이스 ── -->
+<section class="page" id="pg-new">
+  <div class="ph non-print"><h1>새 인보이스 생성</h1></div>
+  <div class="card non-print">
+    <div class="ct">고객 정보</div>
+    <div class="fr fr2">
+      <div class="field"><label>저장된 고객 불러오기</label>
+        <select id="cust-sel" onchange="fillCust()"><option value="">-- 직접 입력 --</option></select>
+      </div>
+      <div class="field"><label>Invoice No. (비워두면 자동)</label><input id="f-no" placeholder="TG-0001"></div>
+    </div>
+    <div class="fr fr2">
+      <div class="field"><label>Bill to (고객명) *</label><input id="f-bt" placeholder="고객명"></div>
+      <div class="field"><label>Order No.</label><input id="f-on" placeholder="ORD-2026-0001"></div>
+    </div>
+    <div class="fr fr2">
+      <div class="field"><label>Mobile</label><input id="f-mob" placeholder="+856-xx-xxxx-xxxx"></div>
+      <div class="field"><label>Email</label><input id="f-em" placeholder="email@example.com"></div>
+    </div>
+    <div class="fr fr2">
+      <div class="field"><label>Date of Issue</label><input id="f-iss" type="date"></div>
+      <div class="field"><label>Date Due</label><input id="f-due" type="date"></div>
+    </div>
+  </div>
+
+  <div class="card non-print">
+    <div class="ct">제품 목록</div>
+    <table class="itbl">
+      <thead><tr>
+        <th style="width:30px">No.</th>
+        <th>Product</th>
+        <th style="width:130px" class="r">Unit Price (LAK)</th>
+        <th style="width:75px" class="r">Quantity</th>
+        <th style="width:120px" class="r">Total Price (LAK)</th>
+        <th style="width:30px"></th>
+      </tr></thead>
+      <tbody id="item-tbody"></tbody>
+    </table>
+    <div style="margin-top:10px">
+      <button class="btn btn-sm" onclick="addRow()">+ 제품 추가</button>
+    </div>
+    <div class="totals">
+      <div class="trow"><span class="tl">Subtotal (LAK)</span><span class="tv" id="t-sub">₭ 0</span></div>
+      <div style="display:flex;gap:12px;margin:4px 0">
+        <div class="field" style="flex-direction:row;align-items:center;gap:6px">
+          <label style="white-space:nowrap;font-size:11px;font-weight:600;color:var(--muted)">VAT %</label>
+          <input id="f-vat" type="number" value="10" min="0" max="100" style="width:60px" oninput="calc()">
+        </div>
+        <div class="field" style="flex-direction:row;align-items:center;gap:6px">
+          <label style="white-space:nowrap;font-size:11px;font-weight:600;color:var(--muted)">운임 (LAK)</label>
+          <input id="f-fr" type="number" value="0" min="0" style="width:100px" oninput="calc()">
+        </div>
+      </div>
+      <div class="trow"><span class="tl">VAT (LAK)</span><span class="tv" id="t-vat">₭ 0</span></div>
+      <div class="trow"><span class="tl">Freight (LAK)</span><span class="tv" id="t-fr">₭ 0</span></div>
+      <div class="tdiv"></div>
+      <div class="trow grand"><span class="tl">Total Amount (LAK)</span><span class="tv" id="t-tot">₭ 0</span></div>
+      <div class="trow usd"><span class="tl"></span><span class="tv" id="t-usd">≈ USD 0.00</span></div>
+    </div>
+  </div>
+
+  <div class="brow non-print">
+    <button class="btn btn-g" onclick="doSavePreview()">💾 저장 후 인쇄 미리보기</button>
+    <button class="btn" onclick="doSave()">저장만</button>
+    <button class="btn btn-sm" onclick="resetForm()">초기화</button>
+  </div>
+</section>
+
+<!-- ── 인쇄 미리보기 ── -->
+<section class="page" id="pg-print">
+  <div class="brow non-print" style="margin-bottom:16px">
+    <button class="btn btn-g" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+    <button class="btn" onclick="nav('new')">← 수정</button>
+    <button class="btn" onclick="nav('list')">목록으로</button>
+  </div>
+  <div id="print-area"></div>
+</section>
+
+<!-- ── 인보이스 목록 ── -->
+<section class="page" id="pg-list">
+  <div class="ph"><h1>인보이스 목록</h1></div>
+  <div class="card">
+    <table class="ltbl">
+      <thead><tr>
+        <th>Invoice No.</th><th>고객</th><th>발행일</th><th>만기일</th>
+        <th style="text-align:right">금액 (LAK)</th><th>상태</th><th></th>
+      </tr></thead>
+      <tbody id="list-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── 고객 관리 ── -->
+<section class="page" id="pg-customers">
+  <div class="ph"><h1>고객 관리</h1></div>
+  <div class="card">
+    <div class="ct">고객 추가</div>
+    <div class="add-row add-row3">
+      <div class="field"><label>고객명 *</label><input id="nc-n" placeholder="회사명 또는 이름"></div>
+      <div class="field"><label>전화번호</label><input id="nc-m" placeholder="+856-..."></div>
+      <div class="field"><label>이메일</label><input id="nc-e" placeholder="email@..."></div>
+      <button class="btn btn-g" style="height:36px;align-self:end" onclick="addCust()">추가</button>
+    </div>
+    <div class="lgrid" id="cust-list"><p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p></div>
+  </div>
+</section>
+
+<!-- ── 제품 관리 ── -->
+<section class="page" id="pg-products">
+  <div class="ph"><h1>제품 관리</h1></div>
+  <div class="card">
+    <div class="ct">제품 추가</div>
+    <div class="add-row add-row2">
+      <div class="field"><label>제품명 *</label><input id="np-n" placeholder="제품명"></div>
+      <div class="field"><label>단가 (LAK)</label><input id="np-p" type="number" placeholder="0" min="0"></div>
+      <button class="btn btn-g" style="height:36px;align-self:end" onclick="addProd()">추가</button>
+    </div>
+    <div class="lgrid" id="prod-list"><p style="color:#aaa;font-size:12px">저장된 제품이 없습니다.</p></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+/* ═══════════════════════════════
+   DB  (localStorage)
+═══════════════════════════════ */
+const KEY = 'tgc_db';
+let db = { customers:[], products:[], invoices:[], lastNo:0 };
+function loadDB(){
+  try{ const r=localStorage.getItem(KEY); if(r) db=JSON.parse(r); }catch(e){}
+}
+function saveDB(){ try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){} }
+loadDB();
+
+/* ═══════════════════════════════
+   NAV
+═══════════════════════════════ */
+const PAGES={dashboard:'pg-dashboard',new:'pg-new',list:'pg-list',print:'pg-print',customers:'pg-customers',products:'pg-products'};
+const NAV_IDX={dashboard:0,new:1,list:2,customers:3,products:4};
+function nav(k){
+  Object.values(PAGES).forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById(PAGES[k]).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach((el,i)=>el.classList.toggle('active',i===NAV_IDX[k]));
+  if(k==='dashboard') renderDash();
+  if(k==='list') renderList();
+  if(k==='new'){ initForm(); renderCustSel(); }
+}
+
+/* ═══════════════════════════════
+   HELPERS
+═══════════════════════════════ */
+const RATE=22000;
+function fmt(n){ return '₭ '+Math.round(n).toLocaleString(); }
+function fmtN(n){ return Math.round(n).toLocaleString(); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function plus30(){ const d=new Date(); d.setDate(d.getDate()+30); return d.toISOString().slice(0,10); }
+function calcDoc(inv){
+  const sub=inv.items.reduce((s,r)=>s+r.price*r.qty,0);
+  const vat=sub*inv.vatRate;
+  const total=sub+vat+inv.freight;
+  return{sub,vat,total};
+}
+
+/* ═══════════════════════════════
+   FORM / ITEMS
+═══════════════════════════════ */
+let rows=[];
+function initForm(){
+  if(!document.getElementById('f-iss').value){ document.getElementById('f-iss').value=today(); }
+  if(!document.getElementById('f-due').value){ document.getElementById('f-due').value=plus30(); }
+  if(rows.length===0){ rows=[{product:'',price:0,qty:1},{product:'',price:0,qty:1}]; }
+  renderRows();
+}
+function addRow(){ rows.push({product:'',price:0,qty:1}); renderRows(); }
+function delRow(i){ rows.splice(i,1); renderRows(); }
+function updRow(i,k,v){ rows[i][k]=v; calc(); renderTotals(); }
+function autoPrice(i,name){
+  const p=db.products.find(x=>x.name===name);
+  if(p){ rows[i].price=p.price; renderRows(); }
+}
+function renderRows(){
+  const tb=document.getElementById('item-tbody');
+  tb.innerHTML='';
+  rows.forEach((r,i)=>{
+    const opts=db.products.map(p=>`<option value="${p.name}"${p.name===r.product?' selected':''}>${p.name}</option>`).join('');
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="dc" style="color:#aaa">${i+1}</td>
+      <td>
+        <input list="pl-${i}" value="${r.product}" placeholder="제품명"
+          oninput="rows[${i}].product=this.value; autoPrice(${i},this.value)">
+        <datalist id="pl-${i}">${opts}</datalist>
+      </td>
+      <td><input type="number" value="${r.price}" min="0" style="text-align:right"
+        oninput="updRow(${i},'price',+this.value)"></td>
+      <td><input type="number" value="${r.qty}" min="1" style="text-align:right;width:60px"
+        oninput="updRow(${i},'qty',+this.value)"></td>
+      <td class="tc">${fmtN(r.price*r.qty)}</td>
+      <td><button class="del-btn" onclick="delRow(${i})">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  calc();
+}
+function calc(){
+  const sub=rows.reduce((s,r)=>s+r.price*r.qty,0);
+  const vat=sub*(+document.getElementById('f-vat').value||0)/100;
+  const fr=+document.getElementById('f-fr').value||0;
+  const tot=sub+vat+fr;
+  document.getElementById('t-sub').textContent=fmt(sub);
+  document.getElementById('t-vat').textContent=fmt(vat);
+  document.getElementById('t-fr').textContent=fmt(fr);
+  document.getElementById('t-tot').textContent=fmt(tot);
+  document.getElementById('t-usd').textContent='≈ USD '+(tot/RATE).toFixed(2)+'  ($1 = ₭'+RATE.toLocaleString()+')';
+  // update row totals without full re-render
+  document.querySelectorAll('#item-tbody tr').forEach((tr,i)=>{
+    const tc=tr.querySelector('.tc');
+    if(tc) tc.textContent=fmtN(rows[i].price*rows[i].qty);
+  });
+}
+function renderTotals(){ calc(); }
+
+/* ═══════════════════════════════
+   CUSTOMER SELECT
+═══════════════════════════════ */
+function renderCustSel(){
+  const s=document.getElementById('cust-sel');
+  s.innerHTML='<option value="">-- 직접 입력 --</option>'+
+    db.customers.map((c,i)=>`<option value="${i}">${c.name}</option>`).join('');
+}
+function fillCust(){
+  const i=document.getElementById('cust-sel').value;
+  if(i==='') return;
+  const c=db.customers[+i];
+  document.getElementById('f-bt').value=c.name;
+  document.getElementById('f-mob').value=c.mobile||'';
+  document.getElementById('f-em').value=c.email||'';
+}
+
+/* ═══════════════════════════════
+   SAVE
+═══════════════════════════════ */
+function getForm(){
+  const no=document.getElementById('f-no').value.trim()||('TG-'+String(++db.lastNo).padStart(4,'0'));
+  return{
+    no, billTo:document.getElementById('f-bt').value.trim(),
+    orderNo:document.getElementById('f-on').value.trim(),
+    mobile:document.getElementById('f-mob').value.trim(),
+    email:document.getElementById('f-em').value.trim(),
+    issueDate:document.getElementById('f-iss').value,
+    dueDate:document.getElementById('f-due').value,
+    items:rows.filter(r=>r.product||r.price).map(r=>({product:r.product,price:r.price,qty:r.qty})),
+    vatRate:(+document.getElementById('f-vat').value||0)/100,
+    freight:+document.getElementById('f-fr').value||0,
+    status:'pending',
+    createdAt:new Date().toISOString()
+  };
+}
+function doSave(){
+  const d=getForm();
+  if(!d.billTo){alert('고객명을 입력하세요.');return;}
+  db.invoices.push(d); saveDB();
+  alert('✅ 저장 완료: '+d.no);
+  resetForm(); nav('list');
+}
+function doSavePreview(){
+  const d=getForm();
+  if(!d.billTo){alert('고객명을 입력하세요.');return;}
+  if(!db.invoices.find(x=>x.no===d.no)){ db.invoices.push(d); saveDB(); }
+  renderPreview(d); nav('print');
+}
+function resetForm(){
+  ['f-no','f-bt','f-on','f-mob','f-em'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cust-sel').value='';
+  document.getElementById('f-vat').value='10';
+  document.getElementById('f-fr').value='0';
+  document.getElementById('f-iss').value=today();
+  document.getElementById('f-due').value=plus30();
+  rows=[]; initForm();
+}
+
+/* ═══════════════════════════════
+   INVOICE DOCUMENT RENDERER
+   (matches original PDF layout)
+═══════════════════════════════ */
+function docHTML(inv, title, copyLabel){
+  const {sub,vat,total}=calcDoc(inv);
+  const MAX=6;
+  let rowsHTML='';
+  for(let i=0;i<MAX;i++){
+    const it=inv.items[i];
+    const bg=i%2===1?' style="background:#F5F9F2"':'';
+    if(it){
+      rowsHTML+=`<tr${bg}><td>${i+1}</td><td>${it.product}</td>
+        <td class="r">${fmtN(it.price)}</td><td class="c">${it.qty}</td>
+        <td class="r">${fmtN(it.price*it.qty)}</td></tr>`;
+    } else {
+      rowsHTML+=`<tr${bg}><td>${i+1}</td><td></td><td></td><td></td><td></td></tr>`;
+    }
+  }
+
+  const ackHTML = title==='Delivery Note' ? `
+    <div class="doc-ack">
+      <div class="dat">Acknowledgement</div>
+      <div class="dsub">The undersigned acknowledges receipt of the goods listed above in good condition.</div>
+      <div class="doc-sig-grid">
+        <div class="doc-sig-block">
+          <div class="st">Customer</div>
+          <div class="doc-sig-line">Received by (signature)<span></span></div>
+          <div class="doc-sig-line">Position (Dept.)<span></span></div>
+          <div class="doc-sig-line">Date<span></span></div>
+        </div>
+        <div class="doc-sig-block">
+          <div class="st">Supplier</div>
+          <div class="doc-sig-line">Delivered by (signature)<span></span></div>
+          <div class="doc-sig-line">Position (Dept.)<span></span></div>
+          <div class="doc-sig-line">Date<span></span></div>
+        </div>
+      </div>
+    </div>` : `
+    <div class="doc-terms">
+      <div class="dt">Terms &amp; Conditions</div>
+      <p>• If the invoiced amount is not credited to the designated bank account by the due date, The Green reserves the right to terminate the agreement.</p>
+      <p>• All bank charges are the responsibility of the customer. The Green expects to receive the full amount as stated in this invoice.</p>
+      <p>• Credit terms: Payment due within 30 days of delivery.</p>
+    </div>
+    <div class="doc-bank">
+      <div class="dbt">Bank Details</div>
+      <div class="doc-bank-row">
+        <div class="doc-bank-item">
+          <strong>LDB Bank</strong><br>
+          Name: THE GREEN COMPANY LIMITED<br>
+          Account Number (LAK): 0300-1000-1000-3175
+        </div>
+        <div class="doc-bank-item">
+          <strong>BANQUE POUR LE COMMERCE EXTERIEUR LAO PUBLIC (BCEL)</strong><br>
+          Account Name: THE GREEN COMPANY LIMITED<br>
+          Account Number (LAK): 010-12-05178731<br>
+          Account Number (USD): 010-12-05179279
+        </div>
+      </div>
+    </div>`;
+
+  return `
+  <div class="inv-doc">
+    ${copyLabel?`<div class="doc-copy">${copyLabel}</div>`:''}
+    <div class="doc-top">
+      <div class="doc-logo-box">
+        <div class="lao">ສົດຈາກຟາມ</div>
+        <div class="tagline">Fresh From the Farm</div>
+      </div>
+      <div class="doc-co">
+        The Green Company Limited<br>
+        Parksapmai Village, Xaythany District, Vientiane Capital, Lao PDR<br>
+        WhatsApp: +856-20-55-587-808 (B2B) / +856-20-55-719-124<br>
+        Email: jaymail@snu.ac.kr
+      </div>
+    </div>
+
+    <div class="doc-title">${title}</div>
+
+    <div class="doc-bill">
+      <div>
+        <div class="doc-field"><span class="fl">Bill to:</span><span class="fv">${inv.billTo}</span></div>
+        <div class="doc-field" style="margin-top:4px"><span class="fl">Mobile:</span><span class="fv">${inv.mobile}</span></div>
+        <div class="doc-field" style="margin-top:4px"><span class="fl">Email:</span><span class="fv">${inv.email}</span></div>
+        <div class="doc-field" style="margin-top:4px"><span class="fl">Order No.:</span><span class="fv">${inv.orderNo}</span></div>
+      </div>
+      <div>
+        <div class="doc-field"><span class="fl">Invoice No.:</span><span class="fv">${inv.no}</span></div>
+        <div class="doc-field" style="margin-top:4px"><span class="fl">Date of Issue:</span><span class="fv">${inv.issueDate}</span></div>
+        <div class="doc-field" style="margin-top:4px"><span class="fl">Date due:</span><span class="fv">${inv.dueDate}</span></div>
+      </div>
+    </div>
+
+    <table class="doc-tbl">
+      <thead><tr>
+        <th style="width:28px">No.</th>
+        <th>Product</th>
+        <th class="r" style="width:90px">Unit Price</th>
+        <th class="c" style="width:60px">Quantity</th>
+        <th class="r" style="width:90px">Total Price</th>
+      </tr></thead>
+      <tbody>${rowsHTML}</tbody>
+    </table>
+
+    <div class="doc-totals">
+      <div class="doc-trow"><span class="tl">Subtotal (LAK)</span><span class="tv">${fmtN(sub)}</span></div>
+      <div class="doc-trow"><span class="tl">VAT (LAK)</span><span class="tv">${fmtN(vat)}</span></div>
+      <div class="doc-trow"><span class="tl">Freight (LAK)</span><span class="tv">${fmtN(inv.freight)}</span></div>
+      <div class="doc-grand"><span>Total Amount (LAK)</span><span>₭ ${fmtN(total)}</span></div>
+      <div style="text-align:right;min-width:260px">
+        <div class="doc-trow" style="justify-content:flex-end"><span class="tv" style="font-size:9px;color:#666">(USD) &nbsp; ${(total/RATE).toFixed(2)}</span></div>
+        <div style="font-size:9px;color:#888;text-align:right">$1 = ₭${RATE.toLocaleString()}</div>
+      </div>
+    </div>
+
+    ${ackHTML}
+
+    <div class="doc-footer">
+      The Green, Parksapmai Village, Xaythany District, Vientiane Capital, Lao PDR<br>
+      B2B Contact: +856-205-558-7808
+    </div>
+  </div>`;
+}
+
+function renderPreview(inv){
+  document.getElementById('print-area').innerHTML =
+    docHTML(inv,'INVOICE','') +
+    '<div class="page-break"></div>' +
+    docHTML(inv,'Delivery Note','Copy 1 of 2 (For Customer)') +
+    '<div class="page-break"></div>' +
+    docHTML(inv,'Delivery Note','Copy 2 of 2 (For Supplier)');
+}
+
+/* ═══════════════════════════════
+   DASHBOARD
+═══════════════════════════════ */
+function renderDash(){
+  const now=new Date().toISOString().slice(0,7);
+  const thisM=db.invoices.filter(x=>x.createdAt&&x.createdAt.slice(0,7)===now);
+  const mTotal=thisM.reduce((s,x)=>s+calcDoc(x).total,0);
+  document.getElementById('s-total').textContent=db.invoices.length;
+  document.getElementById('s-month').textContent='₭'+Math.round(mTotal).toLocaleString();
+  document.getElementById('s-pend').textContent=db.invoices.filter(x=>x.status==='pending').length;
+  document.getElementById('s-cust').textContent=db.customers.length;
+  const recent=[...db.invoices].reverse().slice(0,5);
+  const tb=document.getElementById('dash-tbody');
+  tb.innerHTML=recent.length===0?
+    '<tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr>':
+    recent.map(inv=>{
+      const{total}=calcDoc(inv);
+      const[bcl,bl]=inv.status==='paid'?['b-paid','결제완료']:inv.status==='overdue'?['b-overdue','연체']:['b-pending','미결제'];
+      return`<tr><td style="font-weight:600">${inv.no}</td><td>${inv.billTo}</td><td>${inv.issueDate}</td><td>₭ ${fmtN(total)}</td><td><span class="badge ${bcl}">${bl}</span></td></tr>`;
+    }).join('');
+}
+
+/* ═══════════════════════════════
+   INVOICE LIST
+═══════════════════════════════ */
+function renderList(){
+  const tb=document.getElementById('list-tbody');
+  if(!db.invoices.length){
+    tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr>';
+    return;
+  }
+  tb.innerHTML=[...db.invoices].reverse().map((inv,ri)=>{
+    const i=db.invoices.length-1-ri;
+    const{total}=calcDoc(inv);
+    const[bcl,bl]=inv.status==='paid'?['b-paid','결제완료']:inv.status==='overdue'?['b-overdue','연체']:['b-pending','미결제'];
+    return`<tr>
+      <td style="font-weight:600">${inv.no}</td><td>${inv.billTo}</td>
+      <td>${inv.issueDate}</td><td>${inv.dueDate}</td>
+      <td style="text-align:right">₭ ${fmtN(total)}</td>
+      <td><span class="badge ${bcl}">${bl}</span></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="printInv(${i})">인쇄</button>
+        <button class="btn btn-sm" onclick="togglePaid(${i})">${inv.status==='paid'?'미결제로':'결제완료'}</button>
+        <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delInv(${i})">삭제</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function printInv(i){ renderPreview(db.invoices[i]); nav('print'); }
+function togglePaid(i){ db.invoices[i].status=db.invoices[i].status==='paid'?'pending':'paid'; saveDB(); renderList(); }
+function delInv(i){ if(!confirm('삭제하시겠습니까?')) return; db.invoices.splice(i,1); saveDB(); renderList(); }
+
+/* ═══════════════════════════════
+   CUSTOMERS
+═══════════════════════════════ */
+function addCust(){
+  const n=document.getElementById('nc-n').value.trim();
+  if(!n) return;
+  db.customers.push({name:n,mobile:document.getElementById('nc-m').value.trim(),email:document.getElementById('nc-e').value.trim()});
+  saveDB();
+  ['nc-n','nc-m','nc-e'].forEach(id=>document.getElementById(id).value='');
+  renderCustList();
+}
+function delCust(i){ if(!confirm('삭제?')) return; db.customers.splice(i,1); saveDB(); renderCustList(); }
+function renderCustList(){
+  const el=document.getElementById('cust-list');
+  el.innerHTML=db.customers.length===0?'<p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p>':
+    db.customers.map((c,i)=>`
+      <div class="litem">
+        <div><div class="ln">${c.name}</div><div class="ld">${c.mobile} · ${c.email}</div></div>
+        <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delCust(${i})">삭제</button>
+      </div>`).join('');
+}
+
+/* ═══════════════════════════════
+   PRODUCTS
+═══════════════════════════════ */
+function addProd(){
+  const n=document.getElementById('np-n').value.trim();
+  const p=+document.getElementById('np-p').value||0;
+  if(!n) return;
+  db.products.push({name:n,price:p});
+  saveDB();
+  document.getElementById('np-n').value='';
+  document.getElementById('np-p').value='';
+  renderProdList();
+}
+function delProd(i){ if(!confirm('삭제?')) return; db.products.splice(i,1); saveDB(); renderProdList(); }
+function renderProdList(){
+  const el=document.getElementById('prod-list');
+  el.innerHTML=db.products.length===0?'<p style="color:#aaa;font-size:12px">저장된 제품이 없습니다.</p>':
+    db.products.map((p,i)=>`
+      <div class="litem">
+        <div><div class="ln">${p.name}</div><div class="ld">₭ ${p.price.toLocaleString()}</div></div>
+        <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delProd(${i})">삭제</button>
+      </div>`).join('');
+}
+
+/* ═══════════════════════════════
+   INIT
+═══════════════════════════════ */
+renderCustList(); renderProdList(); renderCustSel();
+renderDash(); initForm();
+</script>
+</body>
+</html>
