@@ -193,7 +193,19 @@ body {
 }
 .doc-logo-box .lao { font-family:'Noto Sans Lao',sans-serif; font-size:17px; font-weight:700; }
 .doc-logo-box .tagline { font-size:9px; font-style:italic; opacity:.75; margin-top:1px; }
+.doc-logo-box img { max-height:60px; max-width:160px; display:block; object-fit:contain; }
 .doc-co { font-size:9.5px; color:#333; line-height:1.75; text-align:right; }
+
+/* settings page – logo upload */
+.logo-upload-area {
+  border: 2px dashed var(--border); border-radius:8px;
+  padding:24px; text-align:center; cursor:pointer;
+  transition:border-color .2s; background:#fafafa;
+}
+.logo-upload-area:hover { border-color:var(--g3); }
+.logo-preview { margin-top:16px; }
+.logo-preview img { max-height:80px; max-width:240px; border-radius:6px; border:1px solid var(--border); padding:6px; background:#fff; }
+.logo-hint { font-size:11px; color:var(--muted); margin-top:6px; }
 
 /* title bar */
 .doc-title {
@@ -314,6 +326,10 @@ body {
     <div class="sb-item" onclick="nav('products')">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5l1.5 2H14l-1.5 7H3.5L2 2zm3 9a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm6 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>
       제품 관리
+    </div>
+    <div class="sb-item" onclick="nav('settings')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 5a3 3 0 1 0 0 6A3 3 0 0 0 8 5zm0 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM6.5 1l-.4 1.6A5.5 5.5 0 0 0 4.3 3.8L2.6 3.3 1 5.9l1.2 1.1A5.6 5.6 0 0 0 2.1 8c0 .35.03.7.09 1.02L1 10.1l1.6 2.6 1.7-.5c.4.37.84.68 1.32.92L6 15h4l.38-1.88c.48-.24.92-.55 1.32-.92l1.7.5L15 10.1l-1.1-1.08c.06-.32.1-.67.1-1.02 0-.35-.04-.7-.1-1.01L15 5.9l-1.6-2.6-1.7.5A5.5 5.5 0 0 0 9.9 2.6L9.5 1H6.5z"/></svg>
+      설정
     </div>
   </div>
 </nav>
@@ -460,6 +476,30 @@ body {
   </div>
 </section>
 
+<!-- ── 설정 ── -->
+<section class="page" id="pg-settings">
+  <div class="ph"><h1>설정</h1><p>인보이스 / Delivery Note 로고 관리</p></div>
+  <div class="card" style="max-width:520px">
+    <div class="ct">회사 로고</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">업로드한 이미지가 인보이스와 Delivery Note의 로고 박스에 표시됩니다. PNG / JPG / SVG 권장 (최대 2 MB)</p>
+
+    <div class="logo-upload-area" onclick="document.getElementById('logo-file-input').click()">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--g3)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p style="margin-top:8px;font-size:13px;color:var(--muted)">클릭하여 이미지 선택</p>
+      <input type="file" id="logo-file-input" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
+    </div>
+
+    <div class="logo-preview" id="logo-preview-wrap" style="display:none">
+      <p style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">현재 저장된 로고</p>
+      <img id="logo-preview-img" src="" alt="logo preview">
+      <div style="margin-top:10px">
+        <button class="btn btn-sm" style="color:#c0392b;border-color:#c0392b" onclick="clearLogo()">로고 삭제</button>
+      </div>
+    </div>
+    <p class="logo-hint" id="logo-status"></p>
+  </div>
+</section>
+
 </main>
 </div>
 
@@ -491,10 +531,40 @@ function saveDB(){ try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){
 loadDB();
 
 /* ═══════════════════════════════
+   LOGO (별도 localStorage 키)
+═══════════════════════════════ */
+const LOGO_KEY='tgc_logo';
+function getLogo(){ return localStorage.getItem(LOGO_KEY)||''; }
+function handleLogoUpload(e){
+  const file=e.target.files[0]; if(!file) return;
+  if(file.size>2*1024*1024){ alert('이미지 크기가 2 MB를 초과합니다.'); return; }
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    localStorage.setItem(LOGO_KEY, ev.target.result);
+    renderLogoSettings();
+    document.getElementById('logo-status').textContent='✓ 로고가 저장되었습니다.';
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
+function clearLogo(){
+  if(!confirm('저장된 로고를 삭제하시겠습니까?')) return;
+  localStorage.removeItem(LOGO_KEY);
+  renderLogoSettings();
+  document.getElementById('logo-status').textContent='로고가 삭제되었습니다.';
+}
+function renderLogoSettings(){
+  const logo=getLogo();
+  const wrap=document.getElementById('logo-preview-wrap');
+  if(logo){ wrap.style.display='block'; document.getElementById('logo-preview-img').src=logo; }
+  else { wrap.style.display='none'; }
+}
+
+/* ═══════════════════════════════
    NAV
 ═══════════════════════════════ */
-const PAGES={dashboard:'pg-dashboard',new:'pg-new',list:'pg-list',print:'pg-print',customers:'pg-customers',products:'pg-products'};
-const NAV_IDX={dashboard:0,new:1,list:2,customers:3,products:4};
+const PAGES={dashboard:'pg-dashboard',new:'pg-new',list:'pg-list',print:'pg-print',customers:'pg-customers',products:'pg-products',settings:'pg-settings'};
+const NAV_IDX={dashboard:0,new:1,list:2,customers:3,products:4,settings:5};
 function nav(k){
   Object.values(PAGES).forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById(PAGES[k]).classList.add('active');
@@ -502,6 +572,7 @@ function nav(k){
   if(k==='dashboard') renderDash();
   if(k==='list') renderList();
   if(k==='new'){ initForm(); renderCustSel(); }
+  if(k==='settings') renderLogoSettings();
 }
 
 /* ═══════════════════════════════
@@ -703,8 +774,10 @@ function docHTML(inv, title, copyLabel){
     ${copyLabel?`<div class="doc-copy">${copyLabel}</div>`:''}
     <div class="doc-top">
       <div class="doc-logo-box">
-        <div class="lao">ສົດຈາກຟາມ</div>
-        <div class="tagline">Fresh From the Farm</div>
+        ${getLogo()
+          ? `<img src="${getLogo()}" alt="logo">`
+          : `<div class="lao">ສົດຈາກຟາມ</div><div class="tagline">Fresh From the Farm</div>`
+        }
       </div>
       <div class="doc-co">
         The Green Company Limited<br>
