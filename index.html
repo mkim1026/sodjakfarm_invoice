@@ -223,7 +223,7 @@ body {
 
 /* item table */
 .doc-tbl { width:100%; border-collapse:collapse; font-size:10px; margin-bottom:10px; }
-.doc-tbl thead tr { background: var(--g2); color:#fff; }
+.doc-tbl thead tr { background: #175933; color:#fff; }
 .doc-tbl th { padding:6px 8px; text-align:left; font-weight:600; font-size:10px; }
 .doc-tbl th.r { text-align:right; }
 .doc-tbl th.c { text-align:center; }
@@ -254,9 +254,11 @@ body {
 /* bank */
 .doc-bank { margin-bottom:12px; }
 .doc-bank .dbt { font-weight:700; font-size:10px; margin-bottom:5px; }
-.doc-bank-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.doc-bank-row { display:grid; grid-template-columns:1fr 1fr 110px; gap:8px; align-items:stretch; }
 .doc-bank-item { font-size:9px; color:#333; line-height:1.7; }
 .doc-bank-item strong { font-size:10px; color:var(--g1); }
+.doc-bank-qr { border:1px dashed #9fb7a3; border-radius:6px; min-height:110px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:9px; color:#5a6d5d; background:#fafdf9; padding:6px; }
+.doc-bank-qr .qrl { font-weight:700; color:#2d5039; margin-bottom:3px; display:block; }
 
 /* footer */
 .doc-footer {
@@ -545,6 +547,19 @@ db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
    LOGO (별도 localStorage 키)
 ═══════════════════════════════ */
 const HARDCODED_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 110'>
+  <defs>
+    <style>
+      .mark{fill:%23000000;}
+      .lao{fill:%23000000;font-family:"Noto Sans Lao","Noto Sans",sans-serif;font-weight:700;font-size:33px;}
+      .tag{fill:%23000000;font-family:"Noto Sans",sans-serif;font-style:italic;font-size:14px;}
+    </style>
+  </defs>
+  <path class='mark' d='M116 13c16-7 37-9 52-6 9 2 15 5 21 10-14-4-30-4-43 1-12 4-21 10-30 14-15 7-27 8-43 4 14-1 25-4 43-13z'/>
+  <path class='mark' d='M104 30c18 10 35 10 51 3 9-4 18-8 29-9 7-1 15 0 23 3-7 3-15 8-21 14-9 10-19 14-32 16-18 2-36-7-50-27z'/>
+  <path class='mark' d='M122 20c11 3 23 3 31 1 7-2 13-4 21-3-6 6-14 10-25 11-11 2-19 0-27-9z'/>
+  <text x='68' y='74' class='lao'>ສົດຈາກຟາມ</text>
+  <text x='70' y='94' class='tag'>Fresh From The Farm</text>
 </svg>
 `)}`;
 function getLogo(){ return HARDCODED_LOGO; }
@@ -774,6 +789,7 @@ function docHTML(inv, title, copyLabel){
           Account Number (LAK): 010-12-05178731<br>
           Account Number (USD): 010-12-05179279
         </div>
+        <div class="doc-bank-qr"><div><span class="qrl">QR CODE</span>정사각형 QR 이미지 영역</div></div>
       </div>
     </div>`;
 
