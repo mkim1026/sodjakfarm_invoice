@@ -552,6 +552,23 @@ db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
 ═══════════════════════════════ */
 const LOGO_URL = "https://raw.githubusercontent.com/mkim1026/sodjakfarm_invoice/be21240c3b70e0aedb6a2246856e33aac1438f78/sodjakfarm%20small%20logo.png";
 
+function getLogo() {
+  return LOGO_URL;
+}
+
+function handleLogoUpload(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  alert('현재 버전에서는 고정 로고 URL만 사용합니다.');
+  event.target.value = '';
+  renderLogoSettings();
+}
+
+function clearLogo() {
+  alert('현재 버전에서는 고정 로고 URL을 삭제할 수 없습니다.');
+  renderLogoSettings();
+}
+
 function renderLogoSettings() {
   const wrap = document.getElementById('logo-preview-wrap');
   const img = document.getElementById('logo-preview-img');
