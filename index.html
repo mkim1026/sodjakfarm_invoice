@@ -129,10 +129,10 @@ body {
 
 /* ── TOTALS BOX ── */
 .totals { display:flex; flex-direction:column; align-items:flex-end; gap:5px; margin-top:14px; }
-.trow { display:flex; gap:16px; font-size:12px; align-items:center; }
+.trow { display:flex; gap:16px; font-size:11px; align-items:center; }
 .trow .tl { color:var(--muted); min-width:160px; text-align:right; }
 .trow .tv { min-width:120px; text-align:right; }
-.trow.grand .tl, .trow.grand .tv { font-size:15px; font-weight:700; color:var(--g1); }
+.trow.grand .tl, .trow.grand .tv { font-size:13px; font-weight:700; color:var(--g1); }
 .trow.usd .tv { font-size:11px; color:var(--muted); }
 .tdiv { width:300px; height:1px; background:#ddd; }
 .totals.compact .trow { font-size:11px; }
@@ -242,14 +242,14 @@ body {
 
 /* totals */
 .doc-totals { display:flex; flex-direction:column; align-items:flex-end; gap:3px; margin-bottom:14px; }
-.doc-trow { display:flex; gap:12px; font-size:13px; }
+.doc-trow { display:flex; gap:12px; font-size:11px; }
 .doc-trow .tl { color:#555; min-width:130px; text-align:right; }
 .doc-trow .tv { min-width:100px; text-align:right; }
 .doc-grand {
   background: #175933; color:#fff;
   padding:5px 10px; border-radius:4px;
   display:flex; justify-content:space-between;
-  font-weight:700; font-size:14px; min-width:260px;
+  font-weight:700; font-size:12px; min-width:260px;
   margin-top:2px;
 }
 .doc-usd { font-size:9px; color:#666; text-align:right; margin-top:3px; }
@@ -272,9 +272,16 @@ body {
 /* footer */
 .doc-footer {
   border-top:2px solid var(--g3); padding-top:8px;
-  text-align:center; font-size:9px; color:#555;
+  display:grid; grid-template-columns:120px 1fr; gap:12px; align-items:center;
+  text-align:left; font-size:9px; color:#555;
   line-height:1.8;
 }
+.doc-footer-logo {
+  width:100%; min-height:46px; border:1px dashed #c8d7c8; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; background:#fafdf9;
+}
+.doc-footer-logo img { max-width:100px; max-height:40px; object-fit:contain; display:block; }
+.doc-footer-text { text-align:left; }
 
 /* acknowledgement (delivery note) */
 .doc-ack { margin-top:14px; }
@@ -427,9 +434,9 @@ body {
           <input id="f-fr" type="number" value="0" min="0" style="width:100px" oninput="calc()">
         </div>
       </div>
-      <div class="field" style="width:420px;max-width:100%">
+      <div class="field" style="width:100%;max-width:100%">
         <label>Terms &amp; Conditions (고객별 수정 가능)</label>
-        <textarea id="f-terms" rows="5" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:none"></textarea>
+        <textarea id="f-terms" rows="10" style="width:100%;border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:vertical;min-height:210px"></textarea>
       </div>
       <div class="trow"><span class="tl">VAT (LAK)</span><span class="tv" id="t-vat">₭ 0</span></div>
       <div class="trow"><span class="tl">Freight (LAK)</span><span class="tv" id="t-fr">₭ 0</span></div>
@@ -484,7 +491,7 @@ body {
       <div class="field"><label>고객명 *</label><input id="nc-n" placeholder="회사명 또는 이름"></div>
       <div class="field"><label>전화번호</label><input id="nc-m" placeholder="+856-..."></div>
       <div class="field"><label>이메일</label><input id="nc-e" placeholder="email@..."></div>
-      <div class="field"><label>구분</label><select id="nc-t"><option value="individual">개인</option><option value="b2b">B2B</option></select></div>
+      <div class="field"><label>구분</label><select id="nc-t" onchange="renderCustomerPriceInputs()"><option value="individual">개인</option><option value="b2b">B2B</option></select></div>
       <button class="btn btn-g" style="height:36px;align-self:end" onclick="addCust()">추가</button>
     </div>
     <div class="field" style="margin-bottom:12px">
@@ -782,7 +789,7 @@ function getSelectedCustomerName(){
 }
 function getCustomerProductPrice(customerName, productName){
   const c=findCustomerByName(customerName);
-  if(!c || !c.prices) return null;
+  if(!c || c.type!=='b2b' || !c.prices) return null;
   const v=Number(c.prices[productName]);
   return Number.isFinite(v) ? v : null;
 }
@@ -1049,9 +1056,17 @@ function docHTML(inv, title, copyLabel){
     <div class="doc-bottom">
       ${ackHTML}
       <div class="doc-footer">
-        Office: Ban Thadeua, Sisattanak District, Vientiane Capital, Laos<br>
-        Farm: Parksapmai Village, Xaythany District, Vientiane Capital, Laos<br>
-        B2B Contact: +856-205-558-7808
+        <div class="doc-footer-logo">
+          ${logo
+            ? `<img src="${logo}" alt="Footer Logo">`
+            : `<span>Footer Logo</span>`
+          }
+        </div>
+        <div class="doc-footer-text">
+          Office: Ban Thadeua, Sisattanak District, Vientiane Capital, Laos<br>
+          Farm: Parksapmai Village, Xaythany District, Vientiane Capital, Laos<br>
+          B2B Contact: +856-205-558-7808
+        </div>
       </div>
     </div>
   </div>`;
@@ -1145,12 +1160,13 @@ function delInv(i){ if(!confirm('삭제하시겠습니까?')) return; db.invoice
 function addCust(){
   const n=document.getElementById('nc-n').value.trim();
   if(!n) return;
-  const prices = collectCustomerPrices();
+  const type = document.getElementById('nc-t').value;
+  const prices = type==='b2b' ? collectCustomerPrices() : {};
   db.customers.push({
     name:n,
     mobile:document.getElementById('nc-m').value.trim(),
     email:document.getElementById('nc-e').value.trim(),
-    type:document.getElementById('nc-t').value,
+    type,
     terms:document.getElementById('nc-terms').value.trim(),
     prices
   });
@@ -1167,6 +1183,11 @@ function delCust(i){ if(!confirm('삭제?')) return; db.customers.splice(i,1); s
 function renderCustomerPriceInputs(){
   const el=document.getElementById('nc-price-grid');
   if(!el) return;
+  const type = document.getElementById('nc-t')?.value || 'individual';
+  if(type!=='b2b'){
+    el.innerHTML = `<div class="phd" style="grid-column:1 / -1">개인 고객은 제품 기본 단가를 공통으로 사용합니다.</div>`;
+    return;
+  }
   el.innerHTML = `
     <div class="phd">상품명</div>
     <div class="phd">고객 단가</div>
