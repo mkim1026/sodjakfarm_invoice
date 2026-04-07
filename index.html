@@ -594,8 +594,21 @@ const CLOUD_CFG_KEY = 'tgc_cloud_cfg';
 let cloudCfg = { endpoint:'', token:'' };
 let cloudSyncTimer = null;
 let pauseCloudPush = false;
+function normalizeDBShape(){
+  if(!db || typeof db!=='object') db = {};
+  db.customers = Array.isArray(db.customers) ? db.customers : [];
+  db.products = Array.isArray(db.products) ? db.products : [];
+  db.invoices = Array.isArray(db.invoices) ? db.invoices : [];
+  db.lastNo = Number.isFinite(Number(db.lastNo)) ? Number(db.lastNo) : 0;
+  db.customers = db.customers.map(c=>({
+    ...c,
+    type: c?.type || 'individual',
+    prices: (c && typeof c.prices === 'object' && c.prices) ? c.prices : {}
+  }));
+}
 function loadDB(){
   try{ const r=localStorage.getItem(KEY); if(r) db=JSON.parse(r); }catch(e){}
+  normalizeDBShape();
 }
 function saveDB(){
   try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){}
@@ -643,7 +656,27 @@ function queueCloudPush(){
 }
 loadDB();
 loadCloudCfg();
-db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
+
+const PRODUCT_CATALOG = [
+  'Khai Dee Sod No.1 Box (10eggs)',
+  'Khai Dee Sod No.2 Box (10eggs)',
+  'Khai Dee Sod No.3 Box (10eggs)',
+  'Khai Dee Premium(Cage Free) regular Box (10eggs)',
+  'Khai Dee Premium(Cage Free) size 4 Box (10eggs)',
+  'Khai Dee Sod No.1 Tray (30eggs)',
+  'Khai Dee Sod No.2 Tray (30eggs)',
+  'Khai Dee Sod No.3 Tray (30eggs)',
+  'Khai Dee Premium(Cage Free) regular Tray (30eggs)',
+  'Khai Dee Premium(Cage Free) size 4 Tray (30eggs)'
+];
+function ensureCatalogProducts(){
+  const names = new Set(db.products.map(p=>p.name));
+  PRODUCT_CATALOG.forEach(name=>{
+    if(!names.has(name)) db.products.push({name,price:0});
+  });
+}
+ensureCatalogProducts();
+normalizeDBShape();
 
 const PRODUCT_CATALOG = [
   'Khai Dee Sod No.1 Box (10eggs)',
@@ -723,10 +756,7 @@ async function syncFromCloud(){
     const remote=await cloudPull();
     if(remote){
       db=remote;
-      db.customers=(db.customers||[]).map(c=>({...c,type:c.type||'individual',prices:c.prices||{}}));
-      db.products=db.products||[];
-      db.invoices=db.invoices||[];
-      db.lastNo=db.lastNo||0;
+      normalizeDBShape();
       ensureCatalogProducts();
       localStorage.setItem(KEY,JSON.stringify(db));
       rerenderAll();
@@ -1250,10 +1280,7 @@ async function bootCloud(){
     const remote=await cloudPull();
     if(remote){
       db=remote;
-      db.customers=(db.customers||[]).map(c=>({...c,type:c.type||'individual',prices:c.prices||{}}));
-      db.products=db.products||[];
-      db.invoices=db.invoices||[];
-      db.lastNo=db.lastNo||0;
+      normalizeDBShape();
       ensureCatalogProducts();
       localStorage.setItem(KEY,JSON.stringify(db));
       rerenderAll();
