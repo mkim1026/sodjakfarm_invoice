@@ -190,10 +190,11 @@ body {
   background: #fff; color: #fff;
   padding: 0; border-radius: 0;
   min-width: 130px;
+  padding-bottom: 16px; /* invoice row 높이 정도 여백 */
 }
 .doc-logo-box .lao { font-family:'Noto Sans Lao',sans-serif; font-size:17px; font-weight:700; }
 .doc-logo-box .tagline { font-size:9px; font-style:italic; opacity:.75; margin-top:1px; }
-.doc-logo-box img { width:200px; height:auto; max-width:200px; display:block; object-fit:contain; }
+.doc-logo-box img { width:150px; height:auto; max-width:150px; display:block; object-fit:contain; }
 .doc-co { font-size:9.5px; color:#333; line-height:1.75; text-align:right; }
 
 /* settings page – logo upload */
@@ -551,6 +552,23 @@ db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
    LOGO (별도 localStorage 키)
 ═══════════════════════════════ */
 const LOGO_URL = "https://raw.githubusercontent.com/mkim1026/sodjakfarm_invoice/be21240c3b70e0aedb6a2246856e33aac1438f78/sodjakfarm%20small%20logo.png";
+
+function getLogo() {
+  return LOGO_URL;
+}
+
+function handleLogoUpload(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  alert('현재 버전에서는 고정 로고 URL만 사용합니다.');
+  event.target.value = '';
+  renderLogoSettings();
+}
+
+function clearLogo() {
+  alert('현재 버전에서는 고정 로고 URL을 삭제할 수 없습니다.');
+  renderLogoSettings();
+}
 
 function renderLogoSettings() {
   const wrap = document.getElementById('logo-preview-wrap');
