@@ -347,6 +347,11 @@ body {
   </div>
   <div class="card">
     <div class="ct">최근 인보이스</div>
+    <div class="fr fr3" style="margin-bottom:10px">
+      <div class="field"><label>고객 필터</label><select id="dash-f-cust" onchange="renderDash()"><option value="">전체 고객</option></select></div>
+      <div class="field"><label>발행일 시작</label><input id="dash-f-from" type="date" onchange="renderDash()"></div>
+      <div class="field"><label>발행일 종료</label><input id="dash-f-to" type="date" onchange="renderDash()"></div>
+    </div>
     <table class="ltbl">
       <thead><tr><th>Invoice No.</th><th>고객</th><th>발행일</th><th>금액 (LAK)</th><th>상태</th></tr></thead>
       <tbody id="dash-tbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr></tbody>
@@ -436,6 +441,11 @@ body {
 <section class="page" id="pg-list">
   <div class="ph"><h1>인보이스 목록</h1></div>
   <div class="card">
+    <div class="fr fr3" style="margin-bottom:10px">
+      <div class="field"><label>고객 필터</label><select id="list-f-cust" onchange="renderList()"><option value="">전체 고객</option></select></div>
+      <div class="field"><label>발행일 시작</label><input id="list-f-from" type="date" onchange="renderList()"></div>
+      <div class="field"><label>발행일 종료</label><input id="list-f-to" type="date" onchange="renderList()"></div>
+    </div>
     <table class="ltbl">
       <thead><tr>
         <th>Invoice No.</th><th>고객</th><th>발행일</th><th>만기일</th>
@@ -451,10 +461,11 @@ body {
   <div class="ph"><h1>고객 관리</h1></div>
   <div class="card">
     <div class="ct">고객 추가</div>
-    <div class="add-row add-row3">
+    <div class="add-row" style="grid-template-columns: 1fr 1fr 1fr 140px auto;">
       <div class="field"><label>고객명 *</label><input id="nc-n" placeholder="회사명 또는 이름"></div>
       <div class="field"><label>전화번호</label><input id="nc-m" placeholder="+856-..."></div>
       <div class="field"><label>이메일</label><input id="nc-e" placeholder="email@..."></div>
+      <div class="field"><label>구분</label><select id="nc-t"><option value="individual">개인</option><option value="b2b">B2B</option></select></div>
       <button class="btn btn-g" style="height:36px;align-self:end" onclick="addCust()">추가</button>
     </div>
     <div class="lgrid" id="cust-list"><p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p></div>
@@ -528,6 +539,7 @@ function loadDB(){
 }
 function saveDB(){ try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){} }
 loadDB();
+db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
 
 /* ═══════════════════════════════
    LOGO (별도 localStorage 키)
@@ -648,7 +660,8 @@ function renderTotals(){ calc(); }
 function renderCustSel(){
   const s=document.getElementById('cust-sel');
   s.innerHTML='<option value="">-- 직접 입력 --</option>'+
-    db.customers.map((c,i)=>`<option value="${i}">${c.name}</option>`).join('');
+    db.customers.map((c,i)=>`<option value="${i}">${c.name} (${c.type==='b2b'?'B2B':'개인'})</option>`).join('');
+  populateInvoiceFilters();
 }
 function fillCust(){
   const i=document.getElementById('cust-sel').value;
@@ -683,6 +696,7 @@ function doSave(){
   if(!d.billTo){alert('고객명을 입력하세요.');return;}
   db.invoices.push(d); saveDB();
   alert('✅ 저장 완료: '+d.no);
+  renderDash();
   resetForm(); nav('list');
 }
 function doSavePreview(){
@@ -775,9 +789,9 @@ function docHTML(inv, title, copyLabel){
       </div>
       <div class="doc-co">
         The Green Company Limited<br>
-        Parksapmai Village, Xaythany District, Vientiane Capital, Lao PDR<br>
+        Ban Thadeua, Sisattanak District, Vientiane Capital, Laos<br>
         WhatsApp: +856-20-55-587-808 (B2B) / +856-20-55-719-124<br>
-        Email: jaymail@snu.ac.kr
+        Email: sodjakfarm.official@gmail.com
       </div>
     </div>
 
@@ -822,7 +836,8 @@ function docHTML(inv, title, copyLabel){
     ${ackHTML}
 
     <div class="doc-footer">
-      The Green, Parksapmai Village, Xaythany District, Vientiane Capital, Lao PDR<br>
+      Office: Ban Thadeua, Sisattanak District, Vientiane Capital, Laos<br>
+      Farm: Parksapmai Village, Xaythany District, Vientiane Capital, Laos<br>
       B2B Contact: +856-205-558-7808
     </div>
   </div>`;
@@ -840,6 +855,25 @@ function renderPreview(inv){
 /* ═══════════════════════════════
    DASHBOARD
 ═══════════════════════════════ */
+function populateInvoiceFilters(){
+  const opts = '<option value="">전체 고객</option>' + db.customers.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  const d=document.getElementById('dash-f-cust');
+  const l=document.getElementById('list-f-cust');
+  if(d){ const v=d.value; d.innerHTML=opts; d.value=v; }
+  if(l){ const v=l.value; l.innerHTML=opts; l.value=v; }
+}
+function filterInvoicesByControls(mode){
+  const c=(document.getElementById(`${mode}-f-cust`)?.value||'').trim();
+  const f=document.getElementById(`${mode}-f-from`)?.value||'';
+  const t=document.getElementById(`${mode}-f-to`)?.value||'';
+  return db.invoices.filter(inv=>{
+    if(c && inv.billTo!==c) return false;
+    if(f && inv.issueDate<f) return false;
+    if(t && inv.issueDate>t) return false;
+    return true;
+  });
+}
+
 function renderDash(){
   const now=new Date().toISOString().slice(0,7);
   const thisM=db.invoices.filter(x=>x.createdAt&&x.createdAt.slice(0,7)===now);
@@ -848,7 +882,8 @@ function renderDash(){
   document.getElementById('s-month').textContent='₭'+Math.round(mTotal).toLocaleString();
   document.getElementById('s-pend').textContent=db.invoices.filter(x=>x.status==='pending').length;
   document.getElementById('s-cust').textContent=db.customers.length;
-  const recent=[...db.invoices].reverse().slice(0,5);
+  const filtered=filterInvoicesByControls('dash');
+  const recent=[...filtered].reverse().slice(0,5);
   const tb=document.getElementById('dash-tbody');
   tb.innerHTML=recent.length===0?
     '<tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr>':
@@ -864,12 +899,13 @@ function renderDash(){
 ═══════════════════════════════ */
 function renderList(){
   const tb=document.getElementById('list-tbody');
-  if(!db.invoices.length){
+  const filtered=filterInvoicesByControls('list');
+  if(!filtered.length){
     tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr>';
     return;
   }
-  tb.innerHTML=[...db.invoices].reverse().map((inv,ri)=>{
-    const i=db.invoices.length-1-ri;
+  tb.innerHTML=[...filtered].reverse().map(inv=>{
+    const i=db.invoices.indexOf(inv);
     const{total}=calcDoc(inv);
     const[bcl,bl]=inv.status==='paid'?['b-paid','결제완료']:inv.status==='overdue'?['b-overdue','연체']:['b-pending','미결제'];
     return`<tr>
@@ -886,8 +922,8 @@ function renderList(){
   }).join('');
 }
 function printInv(i){ renderPreview(db.invoices[i]); nav('print'); }
-function togglePaid(i){ db.invoices[i].status=db.invoices[i].status==='paid'?'pending':'paid'; saveDB(); renderList(); }
-function delInv(i){ if(!confirm('삭제하시겠습니까?')) return; db.invoices.splice(i,1); saveDB(); renderList(); }
+function togglePaid(i){ db.invoices[i].status=db.invoices[i].status==='paid'?'pending':'paid'; saveDB(); renderList(); renderDash(); }
+function delInv(i){ if(!confirm('삭제하시겠습니까?')) return; db.invoices.splice(i,1); saveDB(); renderList(); renderDash(); }
 
 /* ═══════════════════════════════
    CUSTOMERS
@@ -895,18 +931,22 @@ function delInv(i){ if(!confirm('삭제하시겠습니까?')) return; db.invoice
 function addCust(){
   const n=document.getElementById('nc-n').value.trim();
   if(!n) return;
-  db.customers.push({name:n,mobile:document.getElementById('nc-m').value.trim(),email:document.getElementById('nc-e').value.trim()});
+  db.customers.push({name:n,mobile:document.getElementById('nc-m').value.trim(),email:document.getElementById('nc-e').value.trim(),type:document.getElementById('nc-t').value});
   saveDB();
   ['nc-n','nc-m','nc-e'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nc-t').value='individual';
   renderCustList();
+  renderCustSel();
+  renderDash();
+  renderList();
 }
-function delCust(i){ if(!confirm('삭제?')) return; db.customers.splice(i,1); saveDB(); renderCustList(); }
+function delCust(i){ if(!confirm('삭제?')) return; db.customers.splice(i,1); saveDB(); renderCustList(); renderCustSel(); renderDash(); renderList(); }
 function renderCustList(){
   const el=document.getElementById('cust-list');
   el.innerHTML=db.customers.length===0?'<p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p>':
     db.customers.map((c,i)=>`
       <div class="litem">
-        <div><div class="ln">${c.name}</div><div class="ld">${c.mobile} · ${c.email}</div></div>
+        <div><div class="ln">${c.name}</div><div class="ld">${c.mobile} · ${c.email} · ${c.type==='b2b'?'B2B':'개인'}</div></div>
         <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delCust(${i})">삭제</button>
       </div>`).join('');
 }
@@ -938,8 +978,8 @@ function renderProdList(){
 /* ═══════════════════════════════
    INIT
 ═══════════════════════════════ */
-renderCustList(); renderProdList(); renderCustSel();
-renderDash(); initForm();
+renderCustList(); renderProdList(); renderCustSel(); populateInvoiceFilters();
+renderDash(); renderList(); initForm();
 </script>
 </body>
 </html>
