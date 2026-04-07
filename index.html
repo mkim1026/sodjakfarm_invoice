@@ -677,27 +677,6 @@ function ensureCatalogProducts(){
 }
 ensureCatalogProducts();
 normalizeDBShape();
-
-const PRODUCT_CATALOG = [
-  'Khai Dee Sod No.1 Box (10eggs)',
-  'Khai Dee Sod No.2 Box (10eggs)',
-  'Khai Dee Sod No.3 Box (10eggs)',
-  'Khai Dee Premium(Cage Free) regular Box (10eggs)',
-  'Khai Dee Premium(Cage Free) size 4 Box (10eggs)',
-   
-  'Khai Dee Sod No.1 Tray (30eggs)',
-  'Khai Dee Sod No.2 Tray (30eggs)',
-  'Khai Dee Sod No.3 Tray (30eggs)',
-  'Khai Dee Premium(Cage Free) regular Tray (30eggs)',
-  'Khai Dee Premium(Cage Free) size 4 Tray (30eggs)'
-];
-function ensureCatalogProducts(){
-  const names = new Set(db.products.map(p=>p.name));
-  PRODUCT_CATALOG.forEach(name=>{
-    if(!names.has(name)) db.products.push({name,price:0});
-  });
-}
-ensureCatalogProducts();
 db.customers=db.customers.map(c=>({...c,prices:c.prices||{}}));
 
 /* ═══════════════════════════════
