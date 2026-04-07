@@ -190,11 +190,12 @@ body {
   background: #fff; color: #fff;
   padding: 0; border-radius: 0;
   min-width: 130px;
+  padding-bottom: 16px; /* invoice row 높이 정도 여백 */
 }
 .doc-logo-box .lao { font-family:'Noto Sans Lao',sans-serif; font-size:17px; font-weight:700; }
 .doc-logo-box .tagline { font-size:9px; font-style:italic; opacity:.75; margin-top:1px; }
-.doc-logo-box img { width:200px; height:auto; max-width:200px; display:block; object-fit:contain; }
-.doc-co { font-size:9.5px; color:#333; line-height:1.75; text-align:right; }
+.doc-logo-box img { width:150px; height:auto; max-width:150px; display:block; object-fit:contain; }
+.doc-co { font-size:9.5px; color:#333; line-height:1.75; text-align:right; margin-top: 10px; }
 
 /* settings page – logo upload */
 .logo-upload-area {
@@ -212,12 +213,11 @@ body {
   background: #fff; color: var(--g1);
   text-align: center; padding: 7px 0;
   font-size: 20px; font-weight: 700;
-  letter-spacing: .04em; margin-bottom:14px;
-  border-top: 2px solid var(--g1); border-bottom: 2px solid var(--g1);
+  letter-spacing: .04em; margin-bottom:18px;
 }
 
 /* billing grid */
-.doc-bill { display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; margin-bottom:14px; }
+.doc-bill { display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; margin-bottom:18px; }
 .doc-field { display:flex; gap:5px; border-bottom:1px solid #DDD; padding-bottom:4px; font-size:10px; }
 .doc-field .fl { font-weight:700; white-space:nowrap; color:#333; }
 .doc-field .fv { color:#555; }
@@ -256,6 +256,7 @@ body {
 .doc-bank { margin-bottom:12px; }
 .doc-bank .dbt { font-weight:700; font-size:10px; margin-bottom:5px; }
 .doc-bank-row { display:grid; grid-template-columns:1fr 110px 1fr 110px; gap:8px; align-items:stretch; }
+.doc-bank-row > :nth-child(3) { margin-left: 32px; } /* QR(1)과 다음 은행정보 간격 확대 */
 .doc-bank-item { font-size:9px; color:#333; line-height:1.7; }
 .doc-bank-item strong { font-size:10px; color:var(--g1); }
 .doc-bank-qr { border:1px dashed #9fb7a3; border-radius:6px; min-height:110px; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; text-align:center; font-size:9px; color:#5a6d5d; background:#fafdf9; padding:6px; }
@@ -411,12 +412,16 @@ body {
       <div style="display:flex;gap:12px;margin:4px 0">
         <div class="field" style="flex-direction:row;align-items:center;gap:6px">
           <label style="white-space:nowrap;font-size:11px;font-weight:600;color:var(--muted)">VAT %</label>
-          <input id="f-vat" type="number" value="10" min="0" max="100" style="width:60px" oninput="calc()">
+          <input id="f-vat" type="number" value="0" min="0" max="100" style="width:60px" oninput="calc()">
         </div>
         <div class="field" style="flex-direction:row;align-items:center;gap:6px">
           <label style="white-space:nowrap;font-size:11px;font-weight:600;color:var(--muted)">운임 (LAK)</label>
           <input id="f-fr" type="number" value="0" min="0" style="width:100px" oninput="calc()">
         </div>
+      </div>
+      <div class="field" style="width:420px;max-width:100%">
+        <label>Terms &amp; Conditions (고객별 수정 가능)</label>
+        <textarea id="f-terms" rows="4" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:vertical"></textarea>
       </div>
       <div class="trow"><span class="tl">VAT (LAK)</span><span class="tv" id="t-vat">₭ 0</span></div>
       <div class="trow"><span class="tl">Freight (LAK)</span><span class="tv" id="t-fr">₭ 0</span></div>
@@ -473,6 +478,10 @@ body {
       <div class="field"><label>이메일</label><input id="nc-e" placeholder="email@..."></div>
       <div class="field"><label>구분</label><select id="nc-t"><option value="individual">개인</option><option value="b2b">B2B</option></select></div>
       <button class="btn btn-g" style="height:36px;align-self:end" onclick="addCust()">추가</button>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>고객별 Terms &amp; Conditions</label>
+      <textarea id="nc-terms" rows="3" placeholder="비워두면 기본 약관 사용" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:vertical"></textarea>
     </div>
     <div class="lgrid" id="cust-list"><p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p></div>
   </div>
@@ -552,6 +561,23 @@ db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
 ═══════════════════════════════ */
 const LOGO_URL = "https://raw.githubusercontent.com/mkim1026/sodjakfarm_invoice/be21240c3b70e0aedb6a2246856e33aac1438f78/sodjakfarm%20small%20logo.png";
 
+function getLogo() {
+  return LOGO_URL;
+}
+
+function handleLogoUpload(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  alert('현재 버전에서는 고정 로고 URL만 사용합니다.');
+  event.target.value = '';
+  renderLogoSettings();
+}
+
+function clearLogo() {
+  alert('현재 버전에서는 고정 로고 URL을 삭제할 수 없습니다.');
+  renderLogoSettings();
+}
+
 function renderLogoSettings() {
   const wrap = document.getElementById('logo-preview-wrap');
   const img = document.getElementById('logo-preview-img');
@@ -581,10 +607,16 @@ function nav(k){
    HELPERS
 ═══════════════════════════════ */
 const RATE=22000;
+const DEFAULT_TERMS = [
+  'If the invoiced amount is not credited to the designated bank account by the due date, The Green reserves the right to terminate the agreement.',
+  'All bank charges are the responsibility of the customer. The Green expects to receive the full amount as stated in this invoice.',
+  'Credit terms: Payment due within 30 days of delivery.'
+];
 function fmt(n){ return '₭ '+Math.round(n).toLocaleString(); }
 function fmtN(n){ return Math.round(n).toLocaleString(); }
 function today(){ return new Date().toISOString().slice(0,10); }
 function plus30(){ const d=new Date(); d.setDate(d.getDate()+30); return d.toISOString().slice(0,10); }
+function defaultTermsText(){ return DEFAULT_TERMS.join('\n'); }
 function calcDoc(inv){
   const sub=inv.items.reduce((s,r)=>s+r.price*r.qty,0);
   const vat=sub*inv.vatRate;
@@ -599,6 +631,7 @@ let rows=[];
 function initForm(){
   if(!document.getElementById('f-iss').value){ document.getElementById('f-iss').value=today(); }
   if(!document.getElementById('f-due').value){ document.getElementById('f-due').value=plus30(); }
+  if(!document.getElementById('f-terms').value){ document.getElementById('f-terms').value=defaultTermsText(); }
   if(rows.length===0){ rows=[{product:'',price:0,qty:1},{product:'',price:0,qty:1}]; }
   renderRows();
 }
@@ -666,6 +699,7 @@ function fillCust(){
   document.getElementById('f-bt').value=c.name;
   document.getElementById('f-mob').value=c.mobile||'';
   document.getElementById('f-em').value=c.email||'';
+  document.getElementById('f-terms').value=(c.terms&&c.terms.trim())?c.terms:defaultTermsText();
 }
 
 /* ═══════════════════════════════
@@ -683,6 +717,7 @@ function getForm(){
     items:rows.filter(r=>r.product||r.price).map(r=>({product:r.product,price:r.price,qty:r.qty})),
     vatRate:(+document.getElementById('f-vat').value||0)/100,
     freight:+document.getElementById('f-fr').value||0,
+    termsText:document.getElementById('f-terms').value.trim() || defaultTermsText(),
     status:'pending',
     createdAt:new Date().toISOString()
   };
@@ -704,8 +739,9 @@ function doSavePreview(){
 function resetForm(){
   ['f-no','f-bt','f-on','f-mob','f-em'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cust-sel').value='';
-  document.getElementById('f-vat').value='10';
+  document.getElementById('f-vat').value='0';
   document.getElementById('f-fr').value='0';
+  document.getElementById('f-terms').value=defaultTermsText();
   document.getElementById('f-iss').value=today();
   document.getElementById('f-due').value=plus30();
   rows=[]; initForm();
@@ -731,6 +767,7 @@ function docHTML(inv, title, copyLabel){
     }
   }
 
+  const termsHTML=(inv.termsText||defaultTermsText()).split('\n').map(s=>s.trim()).filter(Boolean).map(s=>`<p>• ${s.replace(/^•\s*/,'')}</p>`).join('');
   const ackHTML = title==='Delivery Note' ? `
     <div class="doc-ack">
       <div class="dat">Acknowledgement</div>
@@ -752,9 +789,7 @@ function docHTML(inv, title, copyLabel){
     </div>` : `
     <div class="doc-terms">
       <div class="dt">Terms &amp; Conditions</div>
-      <p>• If the invoiced amount is not credited to the designated bank account by the due date, The Green reserves the right to terminate the agreement.</p>
-      <p>• All bank charges are the responsibility of the customer. The Green expects to receive the full amount as stated in this invoice.</p>
-      <p>• Credit terms: Payment due within 30 days of delivery.</p>
+      ${termsHTML}
     </div>
     <div class="doc-bank">
       <div class="dbt">Bank Details</div>
@@ -812,7 +847,7 @@ function docHTML(inv, title, copyLabel){
     <table class="doc-tbl">
       <thead><tr>
         <th style="width:28px">No.</th>
-        <th>Product</th>
+        <th style="width:42%;text-align:center">Product</th>
         <th class="r" style="width:90px">Unit Price</th>
         <th class="c" style="width:60px">Quantity</th>
         <th class="r" style="width:90px">Total Price</th>
@@ -929,9 +964,15 @@ function delInv(i){ if(!confirm('삭제하시겠습니까?')) return; db.invoice
 function addCust(){
   const n=document.getElementById('nc-n').value.trim();
   if(!n) return;
-  db.customers.push({name:n,mobile:document.getElementById('nc-m').value.trim(),email:document.getElementById('nc-e').value.trim(),type:document.getElementById('nc-t').value});
+  db.customers.push({
+    name:n,
+    mobile:document.getElementById('nc-m').value.trim(),
+    email:document.getElementById('nc-e').value.trim(),
+    type:document.getElementById('nc-t').value,
+    terms:document.getElementById('nc-terms').value.trim()
+  });
   saveDB();
-  ['nc-n','nc-m','nc-e'].forEach(id=>document.getElementById(id).value='');
+  ['nc-n','nc-m','nc-e','nc-terms'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('nc-t').value='individual';
   renderCustList();
   renderCustSel();
