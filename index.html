@@ -167,6 +167,9 @@ body {
 .add-row { display:grid; gap:10px; align-items:end; margin-bottom:14px; }
 .add-row3 { grid-template-columns: 1fr 1fr 1fr auto; }
 .add-row2 { grid-template-columns: 1fr 1fr auto; }
+.price-grid { display:grid; grid-template-columns:1fr 140px; gap:8px; }
+.price-grid .phd { font-size:11px; font-weight:600; color:var(--muted); margin-bottom:4px; }
+.price-grid input { width:100%; }
 
 /* ═══════════════════════════════════════════
    INVOICE PRINT TEMPLATE
@@ -486,6 +489,10 @@ body {
       <label>고객별 Terms &amp; Conditions</label>
       <textarea id="nc-terms" rows="5" placeholder="비워두면 기본 약관 사용" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:none"></textarea>
     </div>
+    <div class="field" style="margin-bottom:14px">
+      <label>고객별 상품 단가 (LAK)</label>
+      <div id="nc-price-grid" class="price-grid"></div>
+    </div>
     <div class="lgrid" id="cust-list"><p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p></div>
   </div>
 </section>
@@ -559,6 +566,27 @@ function saveDB(){ try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){
 loadDB();
 db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
 
+const PRODUCT_CATALOG = [
+  'Khai Dee Sod No.1 (박스 10구)',
+  'Khai Dee Sod No.1 (트레이 30구)',
+  'Khai Dee Sod No.2 (박스 10구)',
+  'Khai Dee Sod No.2 (트레이 30구)',
+  'Khai Dee Sod No.3 (박스 10구)',
+  'Khai Dee Sod No.3 (트레이 30구)',
+  'Khai Dee Premium regular (박스 10구)',
+  'Khai Dee Premium regular (트레이 30구)',
+  'Khaidee Premium size 4 (박스 10구)',
+  'Khaidee Premium size 4 (트레이 30구)'
+];
+function ensureCatalogProducts(){
+  const names = new Set(db.products.map(p=>p.name));
+  PRODUCT_CATALOG.forEach(name=>{
+    if(!names.has(name)) db.products.push({name,price:0});
+  });
+}
+ensureCatalogProducts();
+db.customers=db.customers.map(c=>({...c,prices:c.prices||{}}));
+
 /* ═══════════════════════════════
    LOGO (별도 localStorage 키)
 ═══════════════════════════════ */
@@ -620,6 +648,18 @@ function fmtN(n){ return Math.round(n).toLocaleString(); }
 function today(){ return new Date().toISOString().slice(0,10); }
 function plus30(){ const d=new Date(); d.setDate(d.getDate()+30); return d.toISOString().slice(0,10); }
 function defaultTermsText(){ return DEFAULT_TERMS.join('\n'); }
+function findCustomerByName(name){ return db.customers.find(c=>c.name===name); }
+function getSelectedCustomerName(){
+  const idx=document.getElementById('cust-sel')?.value;
+  if(idx==='' || idx==null) return document.getElementById('f-bt')?.value?.trim()||'';
+  return db.customers[+idx]?.name||'';
+}
+function getCustomerProductPrice(customerName, productName){
+  const c=findCustomerByName(customerName);
+  if(!c || !c.prices) return null;
+  const v=Number(c.prices[productName]);
+  return Number.isFinite(v) ? v : null;
+}
 function calcDoc(inv){
   const sub=inv.items.reduce((s,r)=>s+r.price*r.qty,0);
   const vat=sub*inv.vatRate;
@@ -642,6 +682,13 @@ function addRow(){ rows.push({product:'',price:0,qty:1}); renderRows(); }
 function delRow(i){ rows.splice(i,1); renderRows(); }
 function updRow(i,k,v){ rows[i][k]=v; calc(); renderTotals(); }
 function autoPrice(i,name){
+  const customerName=getSelectedCustomerName();
+  const customerPrice=getCustomerProductPrice(customerName,name);
+  if(customerPrice!==null){
+    rows[i].price=customerPrice;
+    renderRows();
+    return;
+  }
   const p=db.products.find(x=>x.name===name);
   if(p){ rows[i].price=p.price; renderRows(); }
 }
@@ -703,6 +750,7 @@ function fillCust(){
   document.getElementById('f-mob').value=c.mobile||'';
   document.getElementById('f-em').value=c.email||'';
   document.getElementById('f-terms').value=(c.terms&&c.terms.trim())?c.terms:defaultTermsText();
+  rows.forEach((r,idx)=>{ if(r.product) autoPrice(idx,r.product); });
 }
 
 /* ═══════════════════════════════
@@ -971,28 +1019,50 @@ function delInv(i){ if(!confirm('삭제하시겠습니까?')) return; db.invoice
 function addCust(){
   const n=document.getElementById('nc-n').value.trim();
   if(!n) return;
+  const prices = collectCustomerPrices();
   db.customers.push({
     name:n,
     mobile:document.getElementById('nc-m').value.trim(),
     email:document.getElementById('nc-e').value.trim(),
     type:document.getElementById('nc-t').value,
-    terms:document.getElementById('nc-terms').value.trim()
+    terms:document.getElementById('nc-terms').value.trim(),
+    prices
   });
   saveDB();
   ['nc-n','nc-m','nc-e','nc-terms'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('nc-t').value='individual';
+  renderCustomerPriceInputs();
   renderCustList();
   renderCustSel();
   renderDash();
   renderList();
 }
 function delCust(i){ if(!confirm('삭제?')) return; db.customers.splice(i,1); saveDB(); renderCustList(); renderCustSel(); renderDash(); renderList(); }
+function renderCustomerPriceInputs(){
+  const el=document.getElementById('nc-price-grid');
+  if(!el) return;
+  el.innerHTML = `
+    <div class="phd">상품명</div>
+    <div class="phd">고객 단가</div>
+    ${PRODUCT_CATALOG.map(name=>`
+      <div style="font-size:12px">${name}</div>
+      <input type="number" min="0" step="1" data-pname="${name}" placeholder="기본 단가 사용">
+    `).join('')}
+  `;
+}
+function collectCustomerPrices(){
+  const out={};
+  document.querySelectorAll('#nc-price-grid input[data-pname]').forEach(inp=>{
+    if(inp.value!=='') out[inp.dataset.pname]=+inp.value||0;
+  });
+  return out;
+}
 function renderCustList(){
   const el=document.getElementById('cust-list');
   el.innerHTML=db.customers.length===0?'<p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p>':
     db.customers.map((c,i)=>`
       <div class="litem">
-        <div><div class="ln">${c.name}</div><div class="ld">${c.mobile} · ${c.email} · ${c.type==='b2b'?'B2B':'개인'}</div></div>
+        <div><div class="ln">${c.name}</div><div class="ld">${c.mobile} · ${c.email} · ${c.type==='b2b'?'B2B':'개인'} · 고객단가 ${Object.keys(c.prices||{}).length}개</div></div>
         <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delCust(${i})">삭제</button>
       </div>`).join('');
 }
@@ -1025,6 +1095,8 @@ function renderProdList(){
    INIT
 ═══════════════════════════════ */
 renderCustList(); renderProdList(); renderCustSel(); populateInvoiceFilters();
+renderCustomerPriceInputs();
+saveDB();
 renderDash(); renderList(); initForm();
 </script>
 </body>
