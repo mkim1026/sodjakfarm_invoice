@@ -135,6 +135,8 @@ body {
 .trow.grand .tl, .trow.grand .tv { font-size:13px; font-weight:700; color:var(--g1); }
 .trow.usd .tv { font-size:11px; color:var(--muted); }
 .tdiv { width:300px; height:1px; background:#ddd; }
+.totals.compact .trow { font-size:11px; }
+.totals.compact .trow.grand .tl, .totals.compact .trow.grand .tv { font-size:14px; }
 
 /* ── BUTTONS ── */
 .btn {
@@ -675,6 +677,28 @@ function ensureCatalogProducts(){
 }
 ensureCatalogProducts();
 normalizeDBShape();
+
+const PRODUCT_CATALOG = [
+  'Khai Dee Sod No.1 Box (10eggs)',
+  'Khai Dee Sod No.2 Box (10eggs)',
+  'Khai Dee Sod No.3 Box (10eggs)',
+  'Khai Dee Premium(Cage Free) regular Box (10eggs)',
+  'Khai Dee Premium(Cage Free) size 4 Box (10eggs)',
+   
+  'Khai Dee Sod No.1 Tray (30eggs)',
+  'Khai Dee Sod No.2 Tray (30eggs)',
+  'Khai Dee Sod No.3 Tray (30eggs)',
+  'Khai Dee Premium(Cage Free) regular Tray (30eggs)',
+  'Khai Dee Premium(Cage Free) size 4 Tray (30eggs)'
+];
+function ensureCatalogProducts(){
+  const names = new Set(db.products.map(p=>p.name));
+  PRODUCT_CATALOG.forEach(name=>{
+    if(!names.has(name)) db.products.push({name,price:0});
+  });
+}
+ensureCatalogProducts();
+db.customers=db.customers.map(c=>({...c,prices:c.prices||{}}));
 
 /* ═══════════════════════════════
    LOGO (별도 localStorage 키)
