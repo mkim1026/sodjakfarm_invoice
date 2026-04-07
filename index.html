@@ -135,6 +135,8 @@ body {
 .trow.grand .tl, .trow.grand .tv { font-size:15px; font-weight:700; color:var(--g1); }
 .trow.usd .tv { font-size:11px; color:var(--muted); }
 .tdiv { width:300px; height:1px; background:#ddd; }
+.totals.compact .trow { font-size:11px; }
+.totals.compact .trow.grand .tl, .totals.compact .trow.grand .tv { font-size:14px; }
 
 /* ── BUTTONS ── */
 .btn {
@@ -413,7 +415,7 @@ body {
     <div style="margin-top:10px">
       <button class="btn btn-sm" onclick="addRow()">+ 제품 추가</button>
     </div>
-    <div class="totals">
+    <div class="totals compact">
       <div class="trow"><span class="tl">Subtotal (LAK)</span><span class="tv" id="t-sub">₭ 0</span></div>
       <div style="display:flex;gap:12px;margin:4px 0">
         <div class="field" style="flex-direction:row;align-items:center;gap:6px">
@@ -561,18 +563,18 @@ body {
 </div>
 
 <script>
-/* ════════════ 비밀번호 보안 ════════════ */
-const PW = "871026"; // 사용할 비밀번호 설정
-let access = sessionStorage.getItem('tf_access');
-
-if (access !== 'true') {
-  let input = prompt("put passcode:");
-  if (input === PW) {
-    sessionStorage.setItem('tf_access', 'true');
-  } else {
-    alert("passcode is wrong.");
-    window.location.href = "about:blank"; // 접속 차단
+/* ════════════ 설정 페이지 비밀번호 ════════════ */
+const SETTINGS_PASSWORD = "rlaalghk1!";
+const SETTINGS_ACCESS_KEY = "tf_settings_access";
+function ensureSettingsAccess(){
+  if(sessionStorage.getItem(SETTINGS_ACCESS_KEY)==='true') return true;
+  const input = prompt("설정 페이지 비밀번호를 입력하세요.");
+  if(input === SETTINGS_PASSWORD){
+    sessionStorage.setItem(SETTINGS_ACCESS_KEY,'true');
+    return true;
   }
+  alert("비밀번호가 올바르지 않습니다.");
+  return false;
 }
 
    
@@ -748,6 +750,7 @@ async function backupToCloud(){
 const PAGES={dashboard:'pg-dashboard',new:'pg-new',list:'pg-list',print:'pg-print',customers:'pg-customers',products:'pg-products',settings:'pg-settings'};
 const NAV_IDX={dashboard:0,new:1,list:2,customers:3,products:4,settings:5};
 function nav(k){
+  if(k==='settings' && !ensureSettingsAccess()) return;
   Object.values(PAGES).forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById(PAGES[k]).classList.add('active');
   document.querySelectorAll('.sb-item').forEach((el,i)=>el.classList.toggle('active',i===NAV_IDX[k]));
