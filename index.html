@@ -193,7 +193,6 @@ body {
 }
 .doc-logo-box .lao { font-family:'Noto Sans Lao',sans-serif; font-size:17px; font-weight:700; }
 .doc-logo-box .tagline { font-size:9px; font-style:italic; opacity:.75; margin-top:1px; }
-.doc-logo-box img { max-height:120px; max-width:260px; display:block; object-fit:contain; }
 .doc-co { font-size:9.5px; color:#333; line-height:1.75; text-align:right; }
 
 /* settings page – logo upload */
@@ -534,20 +533,6 @@ loadDB();
    LOGO (별도 localStorage 키)
 ═══════════════════════════════ */
 const HARDCODED_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 680 230'>
-  <defs>
-    <style>
-      .green{fill:%232f8f2f;}
-      .light{fill:%2365a73b;}
-      .txt{fill:%230b6b3d;font-family:"Noto Sans Lao","Noto Sans",sans-serif;font-weight:700;}
-      .tag{fill:%23107846;font-family:"Noto Sans",sans-serif;font-style:italic;font-size:24px;}
-    </style>
-  </defs>
-  <path class='light' d='M145 46c66 26 139-38 207-38 30 0 61 9 87 24-36-52-108-41-161-7-40 26-73 57-133 52z'/>
-  <path class='light' d='M142 82c77 35 163-33 246-22 34 5 62 5 83-3-20 48-84 42-146 57-45 11-90 13-146-32z'/>
-  <path class='green' d='M150 109c68 27 124-15 191-11 32 2 59 8 86 2-25 48-71 83-136 86-59 3-106-26-141-77z'/>
-  <text x='8' y='197' class='txt' font-size='70'>ສົດຈາກຟາມ</text>
-  <text x='10' y='226' class='tag'>Fresh From the Farm</text>
 </svg>
 `)}`;
 function getLogo(){ return HARDCODED_LOGO; }
