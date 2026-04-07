@@ -177,6 +177,8 @@ body {
   width: 794px;           /* A4 96dpi */
   min-height: 1123px;
   padding: 28px 36px 24px;
+  display: flex;
+  flex-direction: column;
   font-family: 'Noto Sans', sans-serif;
   font-size: 11px; color: #1A1A1A;
   border-radius: 10px;
@@ -195,7 +197,7 @@ body {
 .doc-logo-box .lao { font-family:'Noto Sans Lao',sans-serif; font-size:17px; font-weight:700; }
 .doc-logo-box .tagline { font-size:9px; font-style:italic; opacity:.75; margin-top:1px; }
 .doc-logo-box img { width:150px; height:auto; max-width:150px; display:block; object-fit:contain; }
-.doc-co { font-size:9.5px; color:#333; line-height:1.75; text-align:right; margin-top: 10px; }
+.doc-co { font-size:9.5px; color:#333; line-height:1.75; text-align:right; margin-top: 20px; }
 
 /* settings page – logo upload */
 .logo-upload-area {
@@ -213,7 +215,7 @@ body {
   background: #fff; color: var(--g1);
   text-align: center; padding: 7px 0;
   font-size: 30px; font-weight: 700;
-  letter-spacing: .04em; margin-bottom:18px;
+  letter-spacing: .04em; margin-bottom:24px;
 }
 
 /* billing grid */
@@ -235,20 +237,20 @@ body {
 
 /* totals */
 .doc-totals { display:flex; flex-direction:column; align-items:flex-end; gap:3px; margin-bottom:14px; }
-.doc-trow { display:flex; gap:12px; font-size:10px; }
+.doc-trow { display:flex; gap:12px; font-size:13px; }
 .doc-trow .tl { color:#555; min-width:130px; text-align:right; }
 .doc-trow .tv { min-width:100px; text-align:right; }
 .doc-grand {
   background: #175933; color:#fff;
   padding:5px 10px; border-radius:4px;
   display:flex; justify-content:space-between;
-  font-weight:700; font-size:11px; min-width:260px;
+  font-weight:700; font-size:14px; min-width:260px;
   margin-top:2px;
 }
 .doc-usd { font-size:9px; color:#666; text-align:right; margin-top:3px; }
 
 /* terms */
-.doc-terms { border:1px solid #DDD; padding:9px 10px; border-radius:4px; margin-bottom:24px; }
+.doc-terms { border:1px solid #DDD; padding:9px 10px; border-radius:4px; margin-bottom:24px; min-height:110px; }
 .doc-terms .dt { font-weight:700; font-size:10px; margin-bottom:5px; }
 .doc-terms p { font-size:9px; color:#444; line-height:1.65; margin-bottom:2px; }
 
@@ -278,6 +280,7 @@ body {
 .doc-sig-line { font-size:9px; color:#444; margin-bottom:10px; }
 .doc-sig-line span { display:block; border-bottom:1px solid #BBB; margin-top:14px; }
 .doc-copy { font-size:9px; color:#777; text-align:right; margin-bottom:6px; font-style:italic; }
+.doc-bottom { margin-top: auto; }
 
 /* ═══════════════════════════════════════════
    PRINT MEDIA
@@ -421,7 +424,7 @@ body {
       </div>
       <div class="field" style="width:420px;max-width:100%">
         <label>Terms &amp; Conditions (고객별 수정 가능)</label>
-        <textarea id="f-terms" rows="4" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:vertical"></textarea>
+        <textarea id="f-terms" rows="5" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:none"></textarea>
       </div>
       <div class="trow"><span class="tl">VAT (LAK)</span><span class="tv" id="t-vat">₭ 0</span></div>
       <div class="trow"><span class="tl">Freight (LAK)</span><span class="tv" id="t-fr">₭ 0</span></div>
@@ -481,7 +484,7 @@ body {
     </div>
     <div class="field" style="margin-bottom:12px">
       <label>고객별 Terms &amp; Conditions</label>
-      <textarea id="nc-terms" rows="3" placeholder="비워두면 기본 약관 사용" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:vertical"></textarea>
+      <textarea id="nc-terms" rows="5" placeholder="비워두면 기본 약관 사용" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:none"></textarea>
     </div>
     <div class="lgrid" id="cust-list"><p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p></div>
   </div>
@@ -753,7 +756,7 @@ function resetForm(){
 ═══════════════════════════════ */
 function docHTML(inv, title, copyLabel){
   const {sub,vat,total}=calcDoc(inv);
-  const MAX=6;
+  const MAX=8;
   let rowsHTML='';
   for(let i=0;i<MAX;i++){
     const it=inv.items[i];
@@ -767,7 +770,9 @@ function docHTML(inv, title, copyLabel){
     }
   }
 
-  const termsHTML=(inv.termsText||defaultTermsText()).split('\n').map(s=>s.trim()).filter(Boolean).map(s=>`<p>• ${s.replace(/^•\s*/,'')}</p>`).join('');
+  const termLines=(inv.termsText||defaultTermsText()).split('\n').map(s=>s.trim()).filter(Boolean).slice(0,5);
+  while(termLines.length<5) termLines.push('');
+  const termsHTML=termLines.map(s=>s?`<p>• ${s.replace(/^•\s*/,'')}</p>`:'<p>&nbsp;</p>').join('');
   const ackHTML = title==='Delivery Note' ? `
     <div class="doc-ack">
       <div class="dat">Acknowledgement</div>
@@ -866,12 +871,13 @@ function docHTML(inv, title, copyLabel){
       </div>
     </div>
 
-    ${ackHTML}
-
-    <div class="doc-footer">
-      Office: Ban Thadeua, Sisattanak District, Vientiane Capital, Laos<br>
-      Farm: Parksapmai Village, Xaythany District, Vientiane Capital, Laos<br>
-      B2B Contact: +856-205-558-7808
+    <div class="doc-bottom">
+      ${ackHTML}
+      <div class="doc-footer">
+        Office: Ban Thadeua, Sisattanak District, Vientiane Capital, Laos<br>
+        Farm: Parksapmai Village, Xaythany District, Vientiane Capital, Laos<br>
+        B2B Contact: +856-205-558-7808
+      </div>
     </div>
   </div>`;
 }
