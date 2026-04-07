@@ -550,37 +550,16 @@ db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
 /* ═══════════════════════════════
    LOGO (별도 localStorage 키)
 ═══════════════════════════════ */
-const LOGO_KEY='tgc_logo';
-function getLogo(){ return localStorage.getItem(LOGO_KEY)||''; }
-function handleLogoUpload(e){
-  const file=e.target.files[0]; if(!file) return;
-  if(file.size>2*1024*1024){ alert('이미지 크기가 2 MB를 초과합니다.'); return; }
-  const reader=new FileReader();
-  reader.onload=function(ev){
-    localStorage.setItem(LOGO_KEY, ev.target.result);
-    renderLogoSettings();
-    document.getElementById('logo-status').textContent='✓ 로고가 저장되었습니다.';
-  };
-  reader.readAsDataURL(file);
-  e.target.value='';
-}
-function clearLogo(){
-  if(!confirm('저장된 로고를 삭제하시겠습니까?')) return;
-  localStorage.removeItem(LOGO_KEY);
-  renderLogoSettings();
-  document.getElementById('logo-status').textContent='로고가 삭제되었습니다.';
-}
-function renderLogoSettings(){
-  const logo=getLogo();
-  const wrap=document.getElementById('logo-preview-wrap');
-  if(logo){
-    wrap.style.display='block';
-    document.getElementById('logo-preview-img').src=logo;
-    document.getElementById('logo-status').textContent='현재 업로드된 로고가 인보이스 좌측 상단에 적용됩니다.';
-  } else {
-    wrap.style.display='none';
-    document.getElementById('logo-status').textContent='업로드된 로고가 없습니다. 기본 텍스트 로고가 사용됩니다.';
-  }
+const LOGO_URL = "https://raw.githubusercontent.com/mkim1026/sodjakfarm_invoice/be21240c3b70e0aedb6a2246856e33aac1438f78/sodjakfarm%20small%20logo.png";
+
+function renderLogoSettings() {
+  const wrap = document.getElementById('logo-preview-wrap');
+  const img = document.getElementById('logo-preview-img');
+  const status = document.getElementById('logo-status');
+
+  wrap.style.display = 'block';
+  img.src = LOGO_URL;
+  status.textContent = '현재 GitHub 링크의 로고가 인보이스 좌측 상단에 적용됩니다.';
 }
 
 /* ═══════════════════════════════
