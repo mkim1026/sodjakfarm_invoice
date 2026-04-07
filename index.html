@@ -937,6 +937,7 @@ function resetForm(){
 ═══════════════════════════════ */
 function docHTML(inv, title, copyLabel){
   const {sub,vat,total}=calcDoc(inv);
+  const logo = getLogo();
   const MAX=8;
   let rowsHTML='';
   for(let i=0;i<MAX;i++){
@@ -1001,8 +1002,8 @@ function docHTML(inv, title, copyLabel){
     ${copyLabel?`<div class="doc-copy">${copyLabel}</div>`:''}
     <div class="doc-top">
       <div class="doc-logo-box">
-        ${getLogo()
-          ? `<img src="${getLogo()}" alt="logo">`
+        ${logo
+          ? `<img src="${logo}" alt="logo">`
           : `<div class="lao">ສົດຈາກຟາມ</div><div class="tagline">Fresh From the Farm</div>`
         }
       </div>
