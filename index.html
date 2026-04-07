@@ -533,6 +533,28 @@ body {
     </div>
     <p class="logo-hint" id="logo-status"></p>
   </div>
+  <div class="card">
+    <div class="ct">Google Drive 연동 (Apps Script)</div>
+    <div class="fr fr1">
+      <div class="field">
+        <label>Apps Script Web App URL *</label>
+        <input id="cloud-endpoint" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+      <div class="field">
+        <label>Token (선택)</label>
+        <input id="cloud-token" placeholder="스크립트에서 검증할 임의 토큰">
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">
+      저장 구조: GET <code>?action=load</code> → <code>{ "db": { ... } }</code> / POST <code>?action=save</code> + body <code>{ "db": { ... } }</code>
+    </p>
+    <div class="brow" style="margin-top:12px">
+      <button class="btn btn-g" onclick="saveCloudSettings()">연결 정보 저장</button>
+      <button class="btn" onclick="syncFromCloud()">클라우드에서 불러오기</button>
+      <button class="btn" onclick="backupToCloud()">클라우드로 저장</button>
+    </div>
+    <p id="cloud-status" class="logo-hint"></p>
+  </div>
 </section>
 
 </main>
@@ -559,11 +581,59 @@ if (access !== 'true') {
 ═══════════════════════════════ */
 const KEY = 'tgc_db';
 let db = { customers:[], products:[], invoices:[], lastNo:0 };
+const CLOUD_CFG_KEY = 'tgc_cloud_cfg';
+let cloudCfg = { endpoint:'', token:'' };
+let cloudSyncTimer = null;
+let pauseCloudPush = false;
 function loadDB(){
   try{ const r=localStorage.getItem(KEY); if(r) db=JSON.parse(r); }catch(e){}
 }
-function saveDB(){ try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){} }
+function saveDB(){
+  try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){}
+  queueCloudPush();
+}
+function loadCloudCfg(){
+  try{
+    const raw=localStorage.getItem(CLOUD_CFG_KEY);
+    if(raw) cloudCfg={...cloudCfg,...JSON.parse(raw)};
+  }catch(e){}
+}
+function saveCloudCfg(){
+  try{ localStorage.setItem(CLOUD_CFG_KEY,JSON.stringify(cloudCfg)); }catch(e){}
+}
+function isCloudEnabled(){ return !!(cloudCfg.endpoint||'').trim(); }
+function cloudUrl(action){
+  const u=new URL(cloudCfg.endpoint);
+  if(action) u.searchParams.set('action',action);
+  if((cloudCfg.token||'').trim()) u.searchParams.set('token',cloudCfg.token.trim());
+  return u.toString();
+}
+async function cloudPull(){
+  if(!isCloudEnabled()) return null;
+  const res=await fetch(cloudUrl('load'),{method:'GET'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data=await res.json();
+  return data&&data.db?data.db:null;
+}
+async function cloudPush(){
+  if(!isCloudEnabled()||pauseCloudPush) return;
+  const res=await fetch(cloudUrl('save'),{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({db})
+  });
+  if(!res.ok) throw new Error('HTTP '+res.status);
+}
+function queueCloudPush(){
+  if(!isCloudEnabled()||pauseCloudPush) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer=setTimeout(async()=>{
+    try{ await cloudPush(); setCloudStatus('클라우드 저장 완료'); }
+    catch(e){ setCloudStatus('클라우드 저장 실패: '+e.message, true); }
+  },400);
+}
 loadDB();
+loadCloudCfg();
 db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
 
 const PRODUCT_CATALOG = [
@@ -618,6 +688,58 @@ function renderLogoSettings() {
   wrap.style.display = 'block';
   img.src = LOGO_URL;
   status.textContent = '현재 GitHub 링크의 로고가 인보이스 좌측 상단에 적용됩니다.';
+  const ep=document.getElementById('cloud-endpoint');
+  const tk=document.getElementById('cloud-token');
+  if(ep) ep.value=cloudCfg.endpoint||'';
+  if(tk) tk.value=cloudCfg.token||'';
+  setCloudStatus(isCloudEnabled()?'Google Drive 연결 정보가 저장되어 있습니다.':'Google Drive 미연결');
+}
+function setCloudStatus(msg, isErr=false){
+  const el=document.getElementById('cloud-status');
+  if(!el) return;
+  el.style.color=isErr?'#9B2C2C':'var(--muted)';
+  el.textContent=msg;
+}
+function saveCloudSettings(){
+  cloudCfg.endpoint=document.getElementById('cloud-endpoint').value.trim();
+  cloudCfg.token=document.getElementById('cloud-token').value.trim();
+  saveCloudCfg();
+  setCloudStatus(isCloudEnabled()?'연결 정보 저장됨':'연결 정보 제거됨');
+}
+async function syncFromCloud(){
+  if(!isCloudEnabled()){ setCloudStatus('먼저 Web App URL을 입력하세요.',true); return; }
+  try{
+    setCloudStatus('클라우드 불러오는 중...');
+    pauseCloudPush=true;
+    const remote=await cloudPull();
+    if(remote){
+      db=remote;
+      db.customers=(db.customers||[]).map(c=>({...c,type:c.type||'individual',prices:c.prices||{}}));
+      db.products=db.products||[];
+      db.invoices=db.invoices||[];
+      db.lastNo=db.lastNo||0;
+      ensureCatalogProducts();
+      localStorage.setItem(KEY,JSON.stringify(db));
+      rerenderAll();
+      setCloudStatus('클라우드 데이터 불러오기 완료');
+    }else{
+      setCloudStatus('클라우드 데이터가 비어 있습니다.');
+    }
+  }catch(e){
+    setCloudStatus('클라우드 불러오기 실패: '+e.message,true);
+  }finally{
+    pauseCloudPush=false;
+  }
+}
+async function backupToCloud(){
+  if(!isCloudEnabled()){ setCloudStatus('먼저 Web App URL을 입력하세요.',true); return; }
+  try{
+    setCloudStatus('클라우드 저장 중...');
+    await cloudPush();
+    setCloudStatus('클라우드 저장 완료');
+  }catch(e){
+    setCloudStatus('클라우드 저장 실패: '+e.message,true);
+  }
 }
 
 /* ═══════════════════════════════
@@ -1091,14 +1213,40 @@ function renderProdList(){
         <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delProd(${i})">삭제</button>
       </div>`).join('');
 }
+function rerenderAll(){
+  renderCustList(); renderProdList(); renderCustSel(); populateInvoiceFilters();
+  renderCustomerPriceInputs();
+  renderDash(); renderList(); initForm();
+}
+async function bootCloud(){
+  if(!isCloudEnabled()) return;
+  try{
+    pauseCloudPush=true;
+    const remote=await cloudPull();
+    if(remote){
+      db=remote;
+      db.customers=(db.customers||[]).map(c=>({...c,type:c.type||'individual',prices:c.prices||{}}));
+      db.products=db.products||[];
+      db.invoices=db.invoices||[];
+      db.lastNo=db.lastNo||0;
+      ensureCatalogProducts();
+      localStorage.setItem(KEY,JSON.stringify(db));
+      rerenderAll();
+      setCloudStatus('시작 시 클라우드 데이터를 불러왔습니다.');
+    }
+  }catch(e){
+    setCloudStatus('자동 클라우드 동기화 실패: '+e.message,true);
+  }finally{
+    pauseCloudPush=false;
+  }
+}
 
 /* ═══════════════════════════════
    INIT
 ═══════════════════════════════ */
-renderCustList(); renderProdList(); renderCustSel(); populateInvoiceFilters();
-renderCustomerPriceInputs();
+rerenderAll();
 saveDB();
-renderDash(); renderList(); initForm();
+bootCloud();
 </script>
 </body>
 </html>
