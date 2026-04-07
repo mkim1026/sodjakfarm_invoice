@@ -637,16 +637,17 @@ loadCloudCfg();
 db.customers=db.customers.map(c=>({...c,type:c.type||'individual'}));
 
 const PRODUCT_CATALOG = [
-  'Khai Dee Sod No.1 (박스 10구)',
-  'Khai Dee Sod No.1 (트레이 30구)',
-  'Khai Dee Sod No.2 (박스 10구)',
-  'Khai Dee Sod No.2 (트레이 30구)',
-  'Khai Dee Sod No.3 (박스 10구)',
-  'Khai Dee Sod No.3 (트레이 30구)',
-  'Khai Dee Premium regular (박스 10구)',
-  'Khai Dee Premium regular (트레이 30구)',
-  'Khaidee Premium size 4 (박스 10구)',
-  'Khaidee Premium size 4 (트레이 30구)'
+  'Khai Dee Sod No.1 Box (10eggs)',
+  'Khai Dee Sod No.2 Box (10eggs)',
+  'Khai Dee Sod No.3 Box (10eggs)',
+  'Khai Dee Premium(Cage Free) regular Box (10eggs)',
+  'Khai Dee Premium(Cage Free) size 4 Box (10eggs)',
+   
+  'Khai Dee Sod No.1 Tray (30eggs)',
+  'Khai Dee Sod No.2 Tray (30eggs)',
+  'Khai Dee Sod No.3 Tray (30eggs)',
+  'Khai Dee Premium(Cage Free) regular Tray (30eggs)',
+  'Khai Dee Premium(Cage Free) size 4 Tray (30eggs)'
 ];
 function ensureCatalogProducts(){
   const names = new Set(db.products.map(p=>p.name));
