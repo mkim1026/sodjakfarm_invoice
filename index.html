@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -197,7 +197,7 @@ body {
   background: #fff; color: #fff;
   padding: 0; border-radius: 0;
   min-width: 130px;
-  padding-bottom: 10px; /* invoice row 높이 정도 여백 */
+  padding-bottom: 10px; /* spacing roughly the height of one invoice row */
 }
 .doc-logo-box .lao { font-family:'Noto Sans Lao',sans-serif; font-size:17px; font-weight:700; }
 .doc-logo-box .tagline { font-size:9px; font-style:italic; opacity:.75; margin-top:1px; }
@@ -263,7 +263,7 @@ body {
 .doc-bank { margin-bottom:12px; }
 .doc-bank .dbt { font-weight:700; font-size:10px; margin-bottom:5px; }
 .doc-bank-row { display:grid; grid-template-columns:1fr 110px 1fr 110px; gap:8px; align-items:stretch; }
-.doc-bank-row > :nth-child(3) { margin-left: 32px; } /* QR(1)과 다음 은행정보 간격 확대 */
+.doc-bank-row > :nth-child(3) { margin-left: 32px; } /* increase spacing between first QR and next bank info */
 .doc-bank-item { font-size:9px; color:#333; line-height:1.7; }
 .doc-bank-item strong { font-size:10px; color:var(--g1); }
 .doc-bank-qr { border:1px dashed #9fb7a3; border-radius:6px; min-height:110px; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; text-align:center; font-size:9px; color:#5a6d5d; background:#fafdf9; padding:6px; }
@@ -334,27 +334,27 @@ body {
   <div class="sb-nav">
     <div class="sb-item active" onclick="nav('dashboard')">
       <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-      대시보드
+      Dashboard
     </div>
     <div class="sb-item" onclick="nav('new')">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm1 4H7v2H5v2h2v2h2V9h2V7H9V5z"/></svg>
-      새 인보이스
+      New Invoice
     </div>
     <div class="sb-item" onclick="nav('list')">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4h12v1.5H2zm0 3h12v1.5H2zm0 3h8v1.5H2z"/></svg>
-      인보이스 목록
+      Invoice List
     </div>
     <div class="sb-item" onclick="nav('customers')">
       <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6H2z"/></svg>
-      고객 관리
+      Customer Management
     </div>
     <div class="sb-item" onclick="nav('products')">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5l1.5 2H14l-1.5 7H3.5L2 2zm3 9a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm6 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>
-      제품 관리
+      Product Management
     </div>
     <div class="sb-item" onclick="nav('settings')">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 5a3 3 0 1 0 0 6A3 3 0 0 0 8 5zm0 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM6.5 1l-.4 1.6A5.5 5.5 0 0 0 4.3 3.8L2.6 3.3 1 5.9l1.2 1.1A5.6 5.6 0 0 0 2.1 8c0 .35.03.7.09 1.02L1 10.1l1.6 2.6 1.7-.5c.4.37.84.68 1.32.92L6 15h4l.38-1.88c.48-.24.92-.55 1.32-.92l1.7.5L15 10.1l-1.1-1.08c.06-.32.1-.67.1-1.02 0-.35-.04-.7-.1-1.01L15 5.9l-1.6-2.6-1.7.5A5.5 5.5 0 0 0 9.9 2.6L9.5 1H6.5z"/></svg>
-      설정
+      Settings
     </div>
   </div>
 </nav>
@@ -362,42 +362,42 @@ body {
 <!-- ══════════════ MAIN ══════════════ -->
 <main class="main">
 
-<!-- ── 대시보드 ── -->
+<!-- ── Dashboard ── -->
 <section class="page active" id="pg-dashboard">
-  <div class="ph"><h1>대시보드</h1><p>인보이스 현황 요약</p></div>
+  <div class="ph"><h1>Dashboard</h1><p>Invoice status summary</p></div>
   <div class="stats">
-    <div class="stat"><div class="sl">총 인보이스</div><div class="sv" id="s-total">0</div><div class="ss">건</div></div>
-    <div class="stat"><div class="sl">이번달 매출</div><div class="sv" id="s-month" style="font-size:16px">₭ 0</div><div class="ss">LAK</div></div>
-    <div class="stat"><div class="sl">미결제</div><div class="sv" id="s-pend" style="color:#856404">0</div><div class="ss">건</div></div>
-    <div class="stat"><div class="sl">고객 수</div><div class="sv" id="s-cust">0</div><div class="ss">명</div></div>
+    <div class="stat"><div class="sl">Total Invoices</div><div class="sv" id="s-total">0</div><div class="ss">items</div></div>
+    <div class="stat"><div class="sl">Revenue This Month</div><div class="sv" id="s-month" style="font-size:16px">₭ 0</div><div class="ss">LAK</div></div>
+    <div class="stat"><div class="sl">Unpaid</div><div class="sv" id="s-pend" style="color:#856404">0</div><div class="ss">items</div></div>
+    <div class="stat"><div class="sl">Customers</div><div class="sv" id="s-cust">0</div><div class="ss">count</div></div>
   </div>
   <div class="card">
-    <div class="ct">최근 인보이스</div>
+    <div class="ct">Recent Invoices</div>
     <div class="fr fr3" style="margin-bottom:10px">
-      <div class="field"><label>고객 필터</label><select id="dash-f-cust" onchange="renderDash()"><option value="">전체 고객</option></select></div>
-      <div class="field"><label>발행일 시작</label><input id="dash-f-from" type="date" onchange="renderDash()"></div>
-      <div class="field"><label>발행일 종료</label><input id="dash-f-to" type="date" onchange="renderDash()"></div>
+      <div class="field"><label>Customer Filter</label><select id="dash-f-cust" onchange="renderDash()"><option value="">All Customers</option></select></div>
+      <div class="field"><label>Issue Date From</label><input id="dash-f-from" type="date" onchange="renderDash()"></div>
+      <div class="field"><label>Issue Date To</label><input id="dash-f-to" type="date" onchange="renderDash()"></div>
     </div>
     <table class="ltbl">
-      <thead><tr><th>Invoice No.</th><th>고객</th><th>발행일</th><th>금액 (LAK)</th><th>상태</th></tr></thead>
-      <tbody id="dash-tbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr></tbody>
+      <thead><tr><th>Invoice No.</th><th>Customer</th><th>Issue Date</th><th>Amount (LAK)</th><th>Status</th></tr></thead>
+      <tbody id="dash-tbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa">No invoices found</td></tr></tbody>
     </table>
   </div>
 </section>
 
-<!-- ── 새 인보이스 ── -->
+<!-- ── New Invoice ── -->
 <section class="page" id="pg-new">
-  <div class="ph non-print"><h1>새 인보이스 생성</h1></div>
+  <div class="ph non-print"><h1>Create New Invoice</h1></div>
   <div class="card non-print">
-    <div class="ct">고객 정보</div>
+    <div class="ct">Customer Information</div>
     <div class="fr fr2">
-      <div class="field"><label>저장된 고객 불러오기</label>
-        <select id="cust-sel" onchange="fillCust()"><option value="">-- 직접 입력 --</option></select>
+      <div class="field"><label>Load Saved Customer</label>
+        <select id="cust-sel" onchange="fillCust()"><option value="">-- Enter Manually --</option></select>
       </div>
-      <div class="field"><label>Invoice No. (비워두면 자동)</label><input id="f-no" placeholder="TG-0001"></div>
+      <div class="field"><label>Invoice No. (auto if empty)</label><input id="f-no" placeholder="TG-0001"></div>
     </div>
     <div class="fr fr2">
-      <div class="field"><label>Bill to (고객명) *</label><input id="f-bt" placeholder="고객명"></div>
+      <div class="field"><label>Bill to (Customer Name) *</label><input id="f-bt" placeholder="Customer Name"></div>
       <div class="field"><label>Order No.</label><input id="f-on" placeholder="ORD-2026-0001"></div>
     </div>
     <div class="fr fr2">
@@ -411,7 +411,7 @@ body {
   </div>
 
   <div class="card non-print">
-    <div class="ct">제품 목록</div>
+    <div class="ct">Product List</div>
     <table class="itbl">
       <thead><tr>
         <th style="width:30px">No.</th>
@@ -424,7 +424,7 @@ body {
       <tbody id="item-tbody"></tbody>
     </table>
     <div style="margin-top:10px">
-      <button class="btn btn-sm" onclick="addRow()">+ 제품 추가</button>
+      <button class="btn btn-sm" onclick="addRow()">+ Add Product</button>
     </div>
     <div class="totals compact">
       <div class="trow"><span class="tl">Subtotal (LAK)</span><span class="tv" id="t-sub">₭ 0</span></div>
@@ -434,12 +434,12 @@ body {
           <input id="f-vat" type="number" value="0" min="0" max="100" style="width:60px" oninput="calc()">
         </div>
         <div class="field" style="flex-direction:row;align-items:center;gap:6px">
-          <label style="white-space:nowrap;font-size:11px;font-weight:600;color:var(--muted)">운임 (LAK)</label>
+          <label style="white-space:nowrap;font-size:11px;font-weight:600;color:var(--muted)">Freight (LAK)</label>
           <input id="f-fr" type="number" value="0" min="0" style="width:100px" oninput="calc()">
         </div>
       </div>
       <div class="field" style="width:100%;max-width:100%">
-        <label>Terms &amp; Conditions (고객별 수정 가능)</label>
+        <label>Terms &amp; Conditions (editable per customer)</label>
         <textarea id="f-terms" rows="10" style="width:100%;border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:vertical;min-height:210px"></textarea>
       </div>
       <div class="trow"><span class="tl">VAT (LAK)</span><span class="tv" id="t-vat">₭ 0</span></div>
@@ -451,120 +451,120 @@ body {
   </div>
 
   <div class="brow non-print">
-    <button class="btn btn-g" onclick="doSavePreview()">💾 저장 후 인쇄 미리보기</button>
-    <button class="btn" onclick="doSave()">저장만</button>
-    <button class="btn btn-sm" onclick="resetForm()">초기화</button>
+    <button class="btn btn-g" onclick="doSavePreview()">💾 Save & Print Preview</button>
+    <button class="btn" onclick="doSave()">Save Only</button>
+    <button class="btn btn-sm" onclick="resetForm()">Reset</button>
   </div>
 </section>
 
-<!-- ── 인쇄 미리보기 ── -->
+<!-- ── Print Preview ── -->
 <section class="page" id="pg-print">
   <div class="brow non-print" style="margin-bottom:16px">
-    <button class="btn btn-g" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
-    <button class="btn" onclick="nav('new')">← 수정</button>
-    <button class="btn" onclick="nav('list')">목록으로</button>
+    <button class="btn btn-g" onclick="window.print()">🖨 Print / Save PDF</button>
+    <button class="btn" onclick="nav('new')">← Edit</button>
+    <button class="btn" onclick="nav('list')">Back to List</button>
   </div>
   <div id="print-area"></div>
 </section>
 
-<!-- ── 인보이스 목록 ── -->
+<!-- ── Invoice List ── -->
 <section class="page" id="pg-list">
-  <div class="ph"><h1>인보이스 목록</h1></div>
+  <div class="ph"><h1>Invoice List</h1></div>
   <div class="card">
     <div class="fr fr3" style="margin-bottom:10px">
-      <div class="field"><label>고객 필터</label><select id="list-f-cust" onchange="renderList()"><option value="">전체 고객</option></select></div>
-      <div class="field"><label>발행일 시작</label><input id="list-f-from" type="date" onchange="renderList()"></div>
-      <div class="field"><label>발행일 종료</label><input id="list-f-to" type="date" onchange="renderList()"></div>
+      <div class="field"><label>Customer Filter</label><select id="list-f-cust" onchange="renderList()"><option value="">All Customers</option></select></div>
+      <div class="field"><label>Issue Date From</label><input id="list-f-from" type="date" onchange="renderList()"></div>
+      <div class="field"><label>Issue Date To</label><input id="list-f-to" type="date" onchange="renderList()"></div>
     </div>
     <table class="ltbl">
       <thead><tr>
-        <th>Invoice No.</th><th>고객</th><th>발행일</th><th>만기일</th>
-        <th style="text-align:right">금액 (LAK)</th><th>상태</th><th></th>
+        <th>Invoice No.</th><th>Customer</th><th>Issue Date</th><th>Due Date</th>
+        <th style="text-align:right">Amount (LAK)</th><th>Status</th><th></th>
       </tr></thead>
-      <tbody id="list-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr></tbody>
+      <tbody id="list-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">No invoices found</td></tr></tbody>
     </table>
   </div>
 </section>
 
-<!-- ── 고객 관리 ── -->
+<!-- ── Customer Management ── -->
 <section class="page" id="pg-customers">
-  <div class="ph"><h1>고객 관리</h1></div>
+  <div class="ph"><h1>Customer Management</h1></div>
   <div class="card">
-    <div class="ct">고객 추가</div>
+    <div class="ct">Add Customer</div>
     <div class="add-row" style="grid-template-columns: 1fr 1fr 1fr 140px auto;">
-      <div class="field"><label>고객명 *</label><input id="nc-n" placeholder="회사명 또는 이름"></div>
-      <div class="field"><label>전화번호</label><input id="nc-m" placeholder="+856-..."></div>
-      <div class="field"><label>이메일</label><input id="nc-e" placeholder="email@..."></div>
-      <div class="field"><label>구분</label><select id="nc-t" onchange="renderCustomerPriceInputs()"><option value="individual">개인</option><option value="b2b">B2B</option></select></div>
-      <button class="btn btn-g" style="height:36px;align-self:end" onclick="addCust()">추가</button>
+      <div class="field"><label>Customer Name *</label><input id="nc-n" placeholder="Company or Name"></div>
+      <div class="field"><label>Phone Number</label><input id="nc-m" placeholder="+856-..."></div>
+      <div class="field"><label>Email</label><input id="nc-e" placeholder="email@..."></div>
+      <div class="field"><label>Type</label><select id="nc-t" onchange="renderCustomerPriceInputs()"><option value="individual">Individual</option><option value="b2b">B2B</option></select></div>
+      <button class="btn btn-g" style="height:36px;align-self:end" onclick="addCust()">Add</button>
     </div>
     <div class="field" style="margin-bottom:12px">
-      <label>고객별 Terms &amp; Conditions</label>
-      <textarea id="nc-terms" rows="5" placeholder="비워두면 기본 약관 사용" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:none"></textarea>
+      <label>Customer-specific Terms &amp; Conditions</label>
+      <textarea id="nc-terms" rows="5" placeholder="Leave blank to use default terms" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;resize:none"></textarea>
     </div>
     <div class="field" style="margin-bottom:14px">
-      <label>고객별 상품 단가 (LAK)</label>
+      <label>Customer-specific Product Prices (LAK)</label>
       <div id="nc-price-grid" class="price-grid"></div>
     </div>
-    <div class="lgrid" id="cust-list"><p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p></div>
+    <div class="lgrid" id="cust-list"><p style="color:#aaa;font-size:12px">No saved customers.</p></div>
   </div>
 </section>
 
-<!-- ── 제품 관리 ── -->
+<!-- ── Product Management ── -->
 <section class="page" id="pg-products">
-  <div class="ph"><h1>제품 관리</h1></div>
+  <div class="ph"><h1>Product Management</h1></div>
   <div class="card">
-    <div class="ct">제품 추가</div>
+    <div class="ct">Add Product</div>
     <div class="add-row add-row2">
-      <div class="field"><label>제품명 *</label><input id="np-n" placeholder="제품명"></div>
-      <div class="field"><label>단가 (LAK)</label><input id="np-p" type="number" placeholder="0" min="0"></div>
-      <button class="btn btn-g" style="height:36px;align-self:end" onclick="addProd()">추가</button>
+      <div class="field"><label>Product Name *</label><input id="np-n" placeholder="Product Name"></div>
+      <div class="field"><label>Unit Price (LAK)</label><input id="np-p" type="number" placeholder="0" min="0"></div>
+      <button class="btn btn-g" style="height:36px;align-self:end" onclick="addProd()">Add</button>
     </div>
-    <div class="lgrid" id="prod-list"><p style="color:#aaa;font-size:12px">저장된 제품이 없습니다.</p></div>
+    <div class="lgrid" id="prod-list"><p style="color:#aaa;font-size:12px">No saved products.</p></div>
   </div>
 </section>
 
-<!-- ── 설정 ── -->
+<!-- ── Settings ── -->
 <section class="page" id="pg-settings">
-  <div class="ph"><h1>설정</h1><p>인보이스 / Delivery Note 로고 관리</p></div>
+  <div class="ph"><h1>Settings</h1><p>Manage logos for Invoice / Delivery Note</p></div>
   <div class="card" style="max-width:520px">
-    <div class="ct">회사 로고</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">업로드한 이미지가 인보이스와 Delivery Note의 로고 박스에 표시됩니다. PNG / JPG / SVG 권장 (최대 2 MB)</p>
+    <div class="ct">Company Logo</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Uploaded image appears in the logo box for Invoice and Delivery Note. PNG / JPG / SVG recommended (max 2 MB).</p>
 
     <div class="logo-upload-area" onclick="document.getElementById('logo-file-input').click()">
       <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--g3)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      <p style="margin-top:8px;font-size:13px;color:var(--muted)">클릭하여 이미지 선택</p>
+      <p style="margin-top:8px;font-size:13px;color:var(--muted)">Click to select an image</p>
       <input type="file" id="logo-file-input" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
     </div>
 
     <div class="logo-preview" id="logo-preview-wrap" style="display:none">
-      <p style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">현재 저장된 로고</p>
+      <p style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Currently saved logo</p>
       <img id="logo-preview-img" src="" alt="logo preview">
       <div style="margin-top:10px">
-        <button class="btn btn-sm" style="color:#c0392b;border-color:#c0392b" onclick="clearLogo()">로고 삭제</button>
+        <button class="btn btn-sm" style="color:#c0392b;border-color:#c0392b" onclick="clearLogo()">Delete Logo</button>
       </div>
     </div>
     <p class="logo-hint" id="logo-status"></p>
   </div>
   <div class="card">
-    <div class="ct">Google Drive 연동 (Apps Script)</div>
+    <div class="ct">Google Drive Integration (Apps Script)</div>
     <div class="fr fr1">
       <div class="field">
         <label>Apps Script Web App URL *</label>
         <input id="cloud-endpoint" placeholder="https://script.google.com/macros/s/.../exec">
       </div>
       <div class="field">
-        <label>Token (선택)</label>
-        <input id="cloud-token" placeholder="스크립트에서 검증할 임의 토큰">
+        <label>Token (optional)</label>
+        <input id="cloud-token" placeholder="Any token to validate in script">
       </div>
     </div>
     <p style="font-size:11px;color:var(--muted);margin-top:8px">
-      저장 구조: GET <code>?action=load</code> → <code>{ "db": { ... } }</code> / POST <code>?action=save</code> + body <code>{ "db": { ... } }</code>
+      Storage format: GET <code>?action=load</code> → <code>{ "db": { ... } }</code> / POST <code>?action=save</code> + body <code>{ "db": { ... } }</code>
     </p>
     <div class="brow" style="margin-top:12px">
-      <button class="btn btn-g" onclick="saveCloudSettings()">연결 정보 저장</button>
-      <button class="btn" onclick="syncFromCloud()">클라우드에서 불러오기</button>
-      <button class="btn" onclick="backupToCloud()">클라우드로 저장</button>
+      <button class="btn btn-g" onclick="saveCloudSettings()">Save Connection Settings</button>
+      <button class="btn" onclick="syncFromCloud()">Load from Cloud</button>
+      <button class="btn" onclick="backupToCloud()">Save to Cloud</button>
     </div>
     <p id="cloud-status" class="logo-hint"></p>
   </div>
@@ -574,17 +574,17 @@ body {
 </div>
 
 <script>
-/* ════════════ 설정 페이지 비밀번호 ════════════ */
+/* ════════════ Settings Page Password ════════════ */
 const SETTINGS_PASSWORD = "rlaalghk1!";
 const SETTINGS_ACCESS_KEY = "tf_settings_access";
 function ensureSettingsAccess(){
   if(sessionStorage.getItem(SETTINGS_ACCESS_KEY)==='true') return true;
-  const input = prompt("설정 페이지 비밀번호를 입력하세요.");
+  const input = prompt("Enter the settings page password.");
   if(input === SETTINGS_PASSWORD){
     sessionStorage.setItem(SETTINGS_ACCESS_KEY,'true');
     return true;
   }
-  alert("비밀번호가 올바르지 않습니다.");
+  alert("Incorrect password.");
   return false;
 }
 
@@ -654,8 +654,8 @@ function queueCloudPush(){
   if(!isCloudEnabled()||pauseCloudPush) return;
   clearTimeout(cloudSyncTimer);
   cloudSyncTimer=setTimeout(async()=>{
-    try{ await cloudPush(); setCloudStatus('클라우드 저장 완료'); }
-    catch(e){ setCloudStatus('클라우드 저장 실패: '+e.message, true); }
+    try{ await cloudPush(); setCloudStatus('Cloud save completed'); }
+    catch(e){ setCloudStatus('Cloud save failed: '+e.message, true); }
   },400);
 }
 loadDB();
@@ -684,7 +684,7 @@ normalizeDBShape();
 db.customers=db.customers.map(c=>({...c,prices:c.prices||{}}));
 
 /* ═══════════════════════════════
-   LOGO (별도 localStorage 키)
+   LOGO (separate localStorage key)
 ═══════════════════════════════ */
 const LOGO_URL = "https://raw.githubusercontent.com/mkim1026/sodjakfarm_invoice/be21240c3b70e0aedb6a2246856e33aac1438f78/sodjakfarm%20small%20logo.png";
 const FOOTER_LOGO_URL = "https://raw.githubusercontent.com/mkim1026/sodjakfarm_invoice/6d129fd58f67a0416bef2f121a763c772c83de73/logo_thegreen_small.png";
@@ -698,13 +698,13 @@ function getLogo() {
 function handleLogoUpload(event) {
   const file = event?.target?.files?.[0];
   if (!file) return;
-  alert('현재 버전에서는 고정 로고 URL만 사용합니다.');
+  alert('This version only supports the fixed logo URL.');
   event.target.value = '';
   renderLogoSettings();
 }
 
 function clearLogo() {
-  alert('현재 버전에서는 고정 로고 URL을 삭제할 수 없습니다.');
+  alert('This version cannot delete the fixed logo URL.');
   renderLogoSettings();
 }
 
@@ -715,12 +715,12 @@ function renderLogoSettings() {
 
   wrap.style.display = 'block';
   img.src = LOGO_URL;
-  status.textContent = '현재 GitHub 링크의 로고가 인보이스 좌측 상단에 적용됩니다.';
+  status.textContent = 'The logo from the current GitHub link is applied to the top-left of invoices.';
   const ep=document.getElementById('cloud-endpoint');
   const tk=document.getElementById('cloud-token');
   if(ep) ep.value=cloudCfg.endpoint||'';
   if(tk) tk.value=cloudCfg.token||'';
-  setCloudStatus(isCloudEnabled()?'Google Drive 연결 정보가 저장되어 있습니다.':'Google Drive 미연결');
+  setCloudStatus(isCloudEnabled()?'Google Drive connection settings are saved.':'Google Drive not connected');
 }
 function setCloudStatus(msg, isErr=false){
   const el=document.getElementById('cloud-status');
@@ -732,12 +732,12 @@ function saveCloudSettings(){
   cloudCfg.endpoint=document.getElementById('cloud-endpoint').value.trim();
   cloudCfg.token=document.getElementById('cloud-token').value.trim();
   saveCloudCfg();
-  setCloudStatus(isCloudEnabled()?'연결 정보 저장됨':'연결 정보 제거됨');
+  setCloudStatus(isCloudEnabled()?'Connection settings saved':'Connection settings removed');
 }
 async function syncFromCloud(){
-  if(!isCloudEnabled()){ setCloudStatus('먼저 Web App URL을 입력하세요.',true); return; }
+  if(!isCloudEnabled()){ setCloudStatus('Please enter the Web App URL first.',true); return; }
   try{
-    setCloudStatus('클라우드 불러오는 중...');
+    setCloudStatus('Loading from cloud...');
     pauseCloudPush=true;
     const remote=await cloudPull();
     if(remote){
@@ -746,24 +746,24 @@ async function syncFromCloud(){
       ensureCatalogProducts();
       localStorage.setItem(KEY,JSON.stringify(db));
       rerenderAll();
-      setCloudStatus('클라우드 데이터 불러오기 완료');
+      setCloudStatus('Cloud data loaded successfully');
     }else{
-      setCloudStatus('클라우드 데이터가 비어 있습니다.');
+      setCloudStatus('Cloud data is empty.');
     }
   }catch(e){
-    setCloudStatus('클라우드 불러오기 실패: '+e.message,true);
+    setCloudStatus('Cloud load failed: '+e.message,true);
   }finally{
     pauseCloudPush=false;
   }
 }
 async function backupToCloud(){
-  if(!isCloudEnabled()){ setCloudStatus('먼저 Web App URL을 입력하세요.',true); return; }
+  if(!isCloudEnabled()){ setCloudStatus('Please enter the Web App URL first.',true); return; }
   try{
-    setCloudStatus('클라우드 저장 중...');
+    setCloudStatus('Saving to cloud...');
     await cloudPush();
-    setCloudStatus('클라우드 저장 완료');
+    setCloudStatus('Cloud save completed');
   }catch(e){
-    setCloudStatus('클라우드 저장 실패: '+e.message,true);
+    setCloudStatus('Cloud save failed: '+e.message,true);
   }
 }
 
@@ -850,7 +850,7 @@ function renderRows(){
     tr.innerHTML=`
       <td class="dc" style="color:#aaa">${i+1}</td>
       <td>
-        <input list="pl-${i}" value="${r.product}" placeholder="제품명"
+        <input list="pl-${i}" value="${r.product}" placeholder="Product Name"
           oninput="rows[${i}].product=this.value; autoPrice(${i},this.value)">
         <datalist id="pl-${i}">${opts}</datalist>
       </td>
@@ -887,8 +887,8 @@ function renderTotals(){ calc(); }
 ═══════════════════════════════ */
 function renderCustSel(){
   const s=document.getElementById('cust-sel');
-  s.innerHTML='<option value="">-- 직접 입력 --</option>'+
-    db.customers.map((c,i)=>`<option value="${i}">${c.name} (${c.type==='b2b'?'B2B':'개인'})</option>`).join('');
+  s.innerHTML='<option value="">-- Enter Manually --</option>'+
+    db.customers.map((c,i)=>`<option value="${i}">${c.name} (${c.type==='b2b'?'B2B':'Individual'})</option>`).join('');
   populateInvoiceFilters();
 }
 function fillCust(){
@@ -924,15 +924,15 @@ function getForm(){
 }
 function doSave(){
   const d=getForm();
-  if(!d.billTo){alert('고객명을 입력하세요.');return;}
+  if(!d.billTo){alert('Please enter a customer name.');return;}
   db.invoices.push(d); saveDB();
-  alert('✅ 저장 완료: '+d.no);
+  alert('✅ Saved: '+d.no);
   renderDash();
   resetForm(); nav('list');
 }
 function doSavePreview(){
   const d=getForm();
-  if(!d.billTo){alert('고객명을 입력하세요.');return;}
+  if(!d.billTo){alert('Please enter a customer name.');return;}
   if(!db.invoices.find(x=>x.no===d.no)){ db.invoices.push(d); saveDB(); }
   renderPreview(d); nav('print');
 }
@@ -1102,7 +1102,7 @@ function renderPreview(inv){
    DASHBOARD
 ═══════════════════════════════ */
 function populateInvoiceFilters(){
-  const opts = '<option value="">전체 고객</option>' + db.customers.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  const opts = '<option value="">All Customers</option>' + db.customers.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
   const d=document.getElementById('dash-f-cust');
   const l=document.getElementById('list-f-cust');
   if(d){ const v=d.value; d.innerHTML=opts; d.value=v; }
@@ -1132,10 +1132,10 @@ function renderDash(){
   const recent=[...filtered].reverse().slice(0,5);
   const tb=document.getElementById('dash-tbody');
   tb.innerHTML=recent.length===0?
-    '<tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr>':
+    '<tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa">No invoices found</td></tr>':
     recent.map(inv=>{
       const{total}=calcDoc(inv);
-      const[bcl,bl]=inv.status==='paid'?['b-paid','결제완료']:inv.status==='overdue'?['b-overdue','연체']:['b-pending','미결제'];
+      const[bcl,bl]=inv.status==='paid'?['b-paid','Paid']:inv.status==='overdue'?['b-overdue','Overdue']:['b-pending','Unpaid'];
       return`<tr><td style="font-weight:600">${inv.no}</td><td>${inv.billTo}</td><td>${inv.issueDate}</td><td>₭ ${fmtN(total)}</td><td><span class="badge ${bcl}">${bl}</span></td></tr>`;
     }).join('');
 }
@@ -1147,29 +1147,29 @@ function renderList(){
   const tb=document.getElementById('list-tbody');
   const filtered=filterInvoicesByControls('list');
   if(!filtered.length){
-    tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">인보이스가 없습니다</td></tr>';
+    tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">No invoices found</td></tr>';
     return;
   }
   tb.innerHTML=[...filtered].reverse().map(inv=>{
     const i=db.invoices.indexOf(inv);
     const{total}=calcDoc(inv);
-    const[bcl,bl]=inv.status==='paid'?['b-paid','결제완료']:inv.status==='overdue'?['b-overdue','연체']:['b-pending','미결제'];
+    const[bcl,bl]=inv.status==='paid'?['b-paid','Paid']:inv.status==='overdue'?['b-overdue','Overdue']:['b-pending','Unpaid'];
     return`<tr>
       <td style="font-weight:600">${inv.no}</td><td>${inv.billTo}</td>
       <td>${inv.issueDate}</td><td>${inv.dueDate}</td>
       <td style="text-align:right">₭ ${fmtN(total)}</td>
       <td><span class="badge ${bcl}">${bl}</span></td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-sm" onclick="printInv(${i})">인쇄</button>
-        <button class="btn btn-sm" onclick="togglePaid(${i})">${inv.status==='paid'?'미결제로':'결제완료'}</button>
-        <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delInv(${i})">삭제</button>
+        <button class="btn btn-sm" onclick="printInv(${i})">Print</button>
+        <button class="btn btn-sm" onclick="togglePaid(${i})">${inv.status==='paid'?'Mark as Unpaid':'Paid'}</button>
+        <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delInv(${i})">Delete</button>
       </td>
     </tr>`;
   }).join('');
 }
 function printInv(i){ renderPreview(db.invoices[i]); nav('print'); }
 function togglePaid(i){ db.invoices[i].status=db.invoices[i].status==='paid'?'pending':'paid'; saveDB(); renderList(); renderDash(); }
-function delInv(i){ if(!confirm('삭제하시겠습니까?')) return; db.invoices.splice(i,1); saveDB(); renderList(); renderDash(); }
+function delInv(i){ if(!confirm('Are you sure you want to delete?')) return; db.invoices.splice(i,1); saveDB(); renderList(); renderDash(); }
 
 /* ═══════════════════════════════
    CUSTOMERS
@@ -1196,21 +1196,21 @@ function addCust(){
   renderDash();
   renderList();
 }
-function delCust(i){ if(!confirm('삭제?')) return; db.customers.splice(i,1); saveDB(); renderCustList(); renderCustSel(); renderDash(); renderList(); }
+function delCust(i){ if(!confirm('Delete?')) return; db.customers.splice(i,1); saveDB(); renderCustList(); renderCustSel(); renderDash(); renderList(); }
 function renderCustomerPriceInputs(){
   const el=document.getElementById('nc-price-grid');
   if(!el) return;
   const type = document.getElementById('nc-t')?.value || 'individual';
   if(type!=='b2b'){
-    el.innerHTML = `<div class="phd" style="grid-column:1 / -1">개인 고객은 제품 기본 단가를 공통으로 사용합니다.</div>`;
+    el.innerHTML = `<div class="phd" style="grid-column:1 / -1">Individual customers use the default product prices.</div>`;
     return;
   }
   el.innerHTML = `
-    <div class="phd">상품명</div>
-    <div class="phd">고객 단가</div>
+    <div class="phd">Product Name</div>
+    <div class="phd">Customer Price</div>
     ${PRODUCT_CATALOG.map(name=>`
       <div style="font-size:12px">${name}</div>
-      <input type="number" min="0" step="1" data-pname="${name}" placeholder="기본 단가 사용">
+      <input type="number" min="0" step="1" data-pname="${name}" placeholder="Use default price">
     `).join('')}
   `;
 }
@@ -1223,11 +1223,11 @@ function collectCustomerPrices(){
 }
 function renderCustList(){
   const el=document.getElementById('cust-list');
-  el.innerHTML=db.customers.length===0?'<p style="color:#aaa;font-size:12px">저장된 고객이 없습니다.</p>':
+  el.innerHTML=db.customers.length===0?'<p style="color:#aaa;font-size:12px">No saved customers.</p>':
     db.customers.map((c,i)=>`
       <div class="litem">
-        <div><div class="ln">${c.name}</div><div class="ld">${c.mobile} · ${c.email} · ${c.type==='b2b'?'B2B':'개인'} · 고객단가 ${Object.keys(c.prices||{}).length}개</div></div>
-        <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delCust(${i})">삭제</button>
+        <div><div class="ln">${c.name}</div><div class="ld">${c.mobile} · ${c.email} · ${c.type==='b2b'?'B2B':'Individual'} · Customer prices: ${Object.keys(c.prices||{}).length} items</div></div>
+        <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delCust(${i})">Delete</button>
       </div>`).join('');
 }
 
@@ -1244,14 +1244,14 @@ function addProd(){
   document.getElementById('np-p').value='';
   renderProdList();
 }
-function delProd(i){ if(!confirm('삭제?')) return; db.products.splice(i,1); saveDB(); renderProdList(); }
+function delProd(i){ if(!confirm('Delete?')) return; db.products.splice(i,1); saveDB(); renderProdList(); }
 function renderProdList(){
   const el=document.getElementById('prod-list');
-  el.innerHTML=db.products.length===0?'<p style="color:#aaa;font-size:12px">저장된 제품이 없습니다.</p>':
+  el.innerHTML=db.products.length===0?'<p style="color:#aaa;font-size:12px">No saved products.</p>':
     db.products.map((p,i)=>`
       <div class="litem">
         <div><div class="ln">${p.name}</div><div class="ld">₭ ${p.price.toLocaleString()}</div></div>
-        <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delProd(${i})">삭제</button>
+        <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delProd(${i})">Delete</button>
       </div>`).join('');
 }
 function rerenderAll(){
@@ -1270,10 +1270,10 @@ async function bootCloud(){
       ensureCatalogProducts();
       localStorage.setItem(KEY,JSON.stringify(db));
       rerenderAll();
-      setCloudStatus('시작 시 클라우드 데이터를 불러왔습니다.');
+      setCloudStatus('Loaded cloud data on startup.');
     }
   }catch(e){
-    setCloudStatus('자동 클라우드 동기화 실패: '+e.message,true);
+    setCloudStatus('Auto cloud sync failed: '+e.message,true);
   }finally{
     pauseCloudPush=false;
   }
