@@ -277,6 +277,59 @@ body {
 .doc-copy { font-size:9px; color:#777; text-align:right; margin-bottom:6px; font-style:italic; }
 
 /* ═══════════════════════════════════════════
+   STAFF REPORT
+═══════════════════════════════════════════ */
+.staff-tabs { display:flex; gap:0; margin-bottom:18px; }
+.tab-btn {
+  padding:9px 22px; font-size:13px; font-weight:600;
+  cursor:pointer; font-family:inherit;
+  border:1px solid #dde8d4; background:#fff; color:var(--muted);
+  transition:all .12s; user-select:none;
+}
+.tab-btn:first-child { border-radius:8px 0 0 8px; }
+.tab-btn:last-child  { border-radius:0 8px 8px 0; border-left:none; }
+.tab-btn.active      { background:var(--g1); color:#fff; border-color:var(--g1); }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+.radio-group { display:flex; gap:18px; padding:8px 2px; align-items:center; flex-wrap:wrap; }
+.radio-label { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:13px; font-weight:400; }
+.radio-label input[type=radio] { cursor:pointer; accent-color:var(--g2); width:15px; height:15px; }
+.field textarea {
+  border:1px solid #ccc; border-radius:6px;
+  padding:7px 9px; font-size:12px; font-family:inherit;
+  background:#fff; color:var(--text); resize:vertical;
+  transition:border-color .12s, box-shadow .12s;
+}
+.field textarea:focus {
+  outline:none; border-color:var(--g3);
+  box-shadow:0 0 0 3px rgba(74,124,47,.12);
+}
+.rtype-연차 { background:#EAF3DE; color:#3B6D11; }
+.rtype-반차 { background:#E3F0FF; color:#1E5FA8; }
+.rtype-외근 { background:#FFF3CD; color:#856404; }
+
+/* modal */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.48);
+  z-index:9000; display:flex; align-items:center; justify-content:center;
+}
+.modal-box {
+  background:#fff; border-radius:12px; padding:26px 28px;
+  width:520px; max-width:95vw; max-height:90vh; overflow-y:auto;
+  box-shadow:0 8px 40px rgba(0,0,0,.18);
+}
+.modal-header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:20px;
+}
+.modal-header span { font-size:16px; font-weight:700; }
+.modal-header button {
+  background:none; border:none; font-size:20px; cursor:pointer;
+  color:var(--muted); padding:0 4px; line-height:1;
+}
+.modal-header button:hover { color:var(--text); }
+
+/* ═══════════════════════════════════════════
    PRINT MEDIA
 ═══════════════════════════════════════════ */
 @media print {
@@ -330,6 +383,10 @@ body {
     <div class="sb-item" onclick="nav('settings')">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 5a3 3 0 1 0 0 6A3 3 0 0 0 8 5zm0 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM6.5 1l-.4 1.6A5.5 5.5 0 0 0 4.3 3.8L2.6 3.3 1 5.9l1.2 1.1A5.6 5.6 0 0 0 2.1 8c0 .35.03.7.09 1.02L1 10.1l1.6 2.6 1.7-.5c.4.37.84.68 1.32.92L6 15h4l.38-1.88c.48-.24.92-.55 1.32-.92l1.7.5L15 10.1l-1.1-1.08c.06-.32.1-.67.1-1.02 0-.35-.04-.7-.1-1.01L15 5.9l-1.6-2.6-1.7.5A5.5 5.5 0 0 0 9.9 2.6L9.5 1H6.5z"/></svg>
       설정
+    </div>
+    <div class="sb-item" onclick="nav('staff')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M14 3h-1V1.5a.5.5 0 0 0-1 0V3H4V1.5a.5.5 0 0 0-1 0V3H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-1 10H3V7h10v6zM5 9h6v1H5zm0 2h4v1H5z"/></svg>
+      직원 보고
     </div>
   </div>
 </nav>
@@ -500,7 +557,120 @@ body {
   </div>
 </section>
 
+<!-- ── 직원 보고 ── -->
+<section class="page" id="pg-staff">
+  <div class="ph"><h1>직원 보고</h1><p>연차 / 반차 / 외근 보고 · Google Sheets 자동 동기화 · 텔레그램 알림</p></div>
+
+  <!-- Google Apps Script URL 설정 -->
+  <div class="card" style="max-width:660px;margin-bottom:20px">
+    <div class="ct">Google Sheets 연동 설정</div>
+    <div style="display:flex;gap:10px;align-items:flex-end">
+      <div class="field" style="flex:1">
+        <label>Apps Script Web App URL</label>
+        <input id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveGasUrl(this.value)">
+      </div>
+      <button class="btn btn-sm btn-g" onclick="testGasUrl()">연결 테스트</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">설정 가이드: <code style="background:#f5f5f5;padding:1px 5px;border-radius:3px">apps-script/SETUP.md</code> 파일을 참고하세요.</p>
+  </div>
+
+  <!-- 탭 메뉴 -->
+  <div class="staff-tabs">
+    <button class="tab-btn active" id="tab-btn-submit" onclick="switchStaffTab('submit')">📋 보고서 제출</button>
+    <button class="tab-btn" id="tab-btn-mylist" onclick="switchStaffTab('mylist')">📂 내 보고 목록</button>
+  </div>
+
+  <!-- ─ Tab A: 보고서 제출 ─ -->
+  <div class="tab-pane active" id="tab-pane-submit">
+    <div class="card" style="max-width:600px">
+      <div class="ct">새 보고서 제출</div>
+      <div class="fr fr2">
+        <div class="field"><label>이름 *</label><input id="sr-name" placeholder="홍길동"></div>
+        <div class="field">
+          <label>이메일 * <span style="font-weight:400;color:var(--muted)">(수정 시 본인 확인용)</span></label>
+          <input id="sr-email" type="email" placeholder="name@company.com">
+        </div>
+      </div>
+      <div class="fr fr2">
+        <div class="field"><label>날짜 *</label><input id="sr-date" type="date"></div>
+        <div class="field">
+          <label>유형 *</label>
+          <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="sr-type" value="연차" onchange="toggleSrLocation()"><span>연차</span></label>
+            <label class="radio-label"><input type="radio" name="sr-type" value="반차" onchange="toggleSrLocation()"><span>반차</span></label>
+            <label class="radio-label"><input type="radio" name="sr-type" value="외근" onchange="toggleSrLocation()"><span>외근</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="fr fr1">
+        <div class="field"><label>사유</label><textarea id="sr-reason" placeholder="사유를 입력하세요" rows="3" style="width:100%"></textarea></div>
+      </div>
+      <div class="fr fr1" id="sr-location-wrap" style="display:none">
+        <div class="field"><label>외근지 *</label><input id="sr-location" placeholder="방문 장소를 입력하세요"></div>
+      </div>
+      <div class="brow">
+        <button class="btn btn-g" onclick="submitStaffReport()">📤 제출</button>
+        <button class="btn btn-sm" onclick="resetStaffForm()">초기화</button>
+      </div>
+      <p id="sr-status" style="font-size:12px;margin-top:10px"></p>
+    </div>
+  </div>
+
+  <!-- ─ Tab B: 내 보고 목록 ─ -->
+  <div class="tab-pane" id="tab-pane-mylist">
+    <div class="card">
+      <div class="ct">내 보고 조회</div>
+      <div style="display:flex;gap:10px;align-items:flex-end;max-width:420px;margin-bottom:20px">
+        <div class="field" style="flex:1"><label>이메일</label><input id="ml-email" type="email" placeholder="등록한 이메일 입력"></div>
+        <button class="btn btn-g" style="height:36px;align-self:end" onclick="fetchMyReports()">조회</button>
+      </div>
+      <div id="my-reports-wrap">
+        <p style="font-size:12px;color:#aaa">이메일을 입력 후 조회 버튼을 클릭하세요.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 </main>
+</div>
+
+<!-- ── 수정 모달 ── -->
+<div class="modal-overlay" id="edit-modal" style="display:none" onclick="handleModalOverlayClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>보고서 수정</span>
+      <button onclick="closeEditModal()">✕</button>
+    </div>
+
+    <div class="fr fr1" style="margin-bottom:4px">
+      <div class="field">
+        <label>이메일 확인 * <span style="font-weight:400;color:var(--muted)">(제출 시 입력한 이메일)</span></label>
+        <input id="em-email" type="email" placeholder="본인 이메일 입력">
+      </div>
+    </div>
+    <div class="fr fr2">
+      <div class="field"><label>날짜 *</label><input id="em-date" type="date"></div>
+      <div class="field">
+        <label>유형 *</label>
+        <select id="em-type" onchange="toggleEditLocation()" style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit">
+          <option value="연차">연차</option>
+          <option value="반차">반차</option>
+          <option value="외근">외근</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr fr1">
+      <div class="field"><label>사유</label><textarea id="em-reason" rows="3" style="width:100%"></textarea></div>
+    </div>
+    <div class="fr fr1" id="em-location-wrap" style="display:none">
+      <div class="field"><label>외근지 *</label><input id="em-location" placeholder="방문 장소"></div>
+    </div>
+    <p id="em-status" style="font-size:12px;margin-bottom:8px;color:#c0392b;min-height:18px"></p>
+    <div class="brow" style="margin-top:0">
+      <button class="btn btn-g" onclick="updateReport()">✅ 수정 완료</button>
+      <button class="btn" onclick="closeEditModal()">취소</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -563,8 +733,8 @@ function renderLogoSettings(){
 /* ═══════════════════════════════
    NAV
 ═══════════════════════════════ */
-const PAGES={dashboard:'pg-dashboard',new:'pg-new',list:'pg-list',print:'pg-print',customers:'pg-customers',products:'pg-products',settings:'pg-settings'};
-const NAV_IDX={dashboard:0,new:1,list:2,customers:3,products:4,settings:5};
+const PAGES={dashboard:'pg-dashboard',new:'pg-new',list:'pg-list',print:'pg-print',customers:'pg-customers',products:'pg-products',settings:'pg-settings',staff:'pg-staff'};
+const NAV_IDX={dashboard:0,new:1,list:2,customers:3,products:4,settings:5,staff:6};
 function nav(k){
   Object.values(PAGES).forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById(PAGES[k]).classList.add('active');
@@ -573,6 +743,7 @@ function nav(k){
   if(k==='list') renderList();
   if(k==='new'){ initForm(); renderCustSel(); }
   if(k==='settings') renderLogoSettings();
+  if(k==='staff'){ initStaffForm(); loadGasUrl(); }
 }
 
 /* ═══════════════════════════════
@@ -939,6 +1110,279 @@ function renderProdList(){
         <div><div class="ln">${p.name}</div><div class="ld">₭ ${p.price.toLocaleString()}</div></div>
         <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="delProd(${i})">삭제</button>
       </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════
+   STAFF REPORT
+═══════════════════════════════════════════ */
+const GAS_URL_KEY = 'tgc_gas_url';
+let editingReportId = null;
+let myReports = [];
+
+function loadGasUrl(){
+  const v = localStorage.getItem(GAS_URL_KEY) || '';
+  document.getElementById('gas-url').value = v;
+}
+function saveGasUrl(v){
+  localStorage.setItem(GAS_URL_KEY, v.trim());
+}
+function getGasUrl(){
+  return (localStorage.getItem(GAS_URL_KEY) || '').trim();
+}
+
+function testGasUrl(){
+  const url = getGasUrl();
+  if(!url){ alert('URL을 먼저 입력하세요.'); return; }
+  const statusEl = document.getElementById('sr-status');
+  statusEl.textContent = '연결 테스트 중...';
+  statusEl.style.color = 'var(--muted)';
+  fetch(url, { redirect:'follow' })
+    .then(r => r.json())
+    .then(d => {
+      if(d && d.status === 'ok'){
+        statusEl.textContent = '✅ 연결 성공!';
+        statusEl.style.color = 'var(--g2)';
+      } else {
+        statusEl.textContent = '⚠️ 응답은 받았지만 내용을 확인하세요.';
+        statusEl.style.color = '#856404';
+      }
+    })
+    .catch(() => {
+      statusEl.textContent = '❌ 연결 실패. URL을 확인하세요.';
+      statusEl.style.color = '#c0392b';
+    });
+}
+
+/* ── 탭 전환 ── */
+function switchStaffTab(tab){
+  ['submit','mylist'].forEach(t => {
+    document.getElementById('tab-pane-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tab-btn-'+t).classList.toggle('active',  t===tab);
+  });
+}
+
+/* ── 제출 폼 초기화 ── */
+function initStaffForm(){
+  if(!document.getElementById('sr-date').value){
+    document.getElementById('sr-date').value = today();
+  }
+}
+function resetStaffForm(){
+  ['sr-name','sr-email','sr-location'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('sr-date').value = today();
+  document.getElementById('sr-reason').value = '';
+  document.querySelectorAll('input[name="sr-type"]').forEach(r => r.checked=false);
+  document.getElementById('sr-location-wrap').style.display = 'none';
+  const s = document.getElementById('sr-status');
+  s.textContent=''; s.style.color='';
+}
+
+/* ── 외근지 필드 토글 ── */
+function toggleSrLocation(){
+  const t = document.querySelector('input[name="sr-type"]:checked');
+  document.getElementById('sr-location-wrap').style.display = (t && t.value==='외근') ? 'block' : 'none';
+}
+function toggleEditLocation(){
+  document.getElementById('em-location-wrap').style.display =
+    document.getElementById('em-type').value === '외근' ? 'block' : 'none';
+}
+
+/* ── 보고서 제출 ── */
+async function submitStaffReport(){
+  const url = getGasUrl();
+  if(!url){ alert('먼저 Apps Script URL을 설정하세요.'); return; }
+
+  const name     = document.getElementById('sr-name').value.trim();
+  const email    = document.getElementById('sr-email').value.trim();
+  const date     = document.getElementById('sr-date').value;
+  const typeEl   = document.querySelector('input[name="sr-type"]:checked');
+  const type     = typeEl ? typeEl.value : '';
+  const reason   = document.getElementById('sr-reason').value.trim();
+  const location = document.getElementById('sr-location').value.trim();
+
+  if(!name)   { alert('이름을 입력하세요.');   return; }
+  if(!email)  { alert('이메일을 입력하세요.');  return; }
+  if(!date)   { alert('날짜를 입력하세요.');   return; }
+  if(!type)   { alert('유형을 선택하세요.');   return; }
+  if(type==='외근' && !location){ alert('외근지를 입력하세요.'); return; }
+
+  const s = document.getElementById('sr-status');
+  s.textContent = '제출 중...'; s.style.color = 'var(--muted)';
+
+  try {
+    const res  = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action:'submit', name, email, date, type, reason, location }),
+      redirect: 'follow'
+    });
+    const data = await res.json();
+    if(data.success){
+      s.textContent = '✅ 제출 완료! Google Sheets에 저장되었습니다.';
+      s.style.color = 'var(--g2)';
+      resetStaffForm();
+    } else {
+      s.textContent = '❌ 오류: ' + (data.error || '알 수 없는 오류');
+      s.style.color = '#c0392b';
+    }
+  } catch(err) {
+    s.textContent = '❌ 연결 오류: ' + err.message;
+    s.style.color = '#c0392b';
+  }
+}
+
+/* ── 내 보고 조회 ── */
+async function fetchMyReports(){
+  const url = getGasUrl();
+  if(!url){ alert('먼저 Apps Script URL을 설정하세요.'); return; }
+  const email = document.getElementById('ml-email').value.trim();
+  if(!email){ alert('이메일을 입력하세요.'); return; }
+
+  const wrap = document.getElementById('my-reports-wrap');
+  wrap.innerHTML = '<p style="font-size:12px;color:#aaa">조회 중...</p>';
+
+  try {
+    const res  = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action:'fetch', email }),
+      redirect: 'follow'
+    });
+    const data = await res.json();
+    if(data.success){
+      renderMyReports(data.rows);
+    } else {
+      wrap.innerHTML = '<p style="color:#c0392b;font-size:12px">오류: '+(data.error||'')+'</p>';
+    }
+  } catch(err) {
+    wrap.innerHTML = '<p style="color:#c0392b;font-size:12px">연결 오류: '+err.message+'</p>';
+  }
+}
+
+/* ── 보고 목록 렌더 ── */
+function typeBadge(type){
+  const cls = type==='연차' ? 'rtype-연차' : type==='반차' ? 'rtype-반차' : 'rtype-외근';
+  return `<span class="badge ${cls}">${type}</span>`;
+}
+function renderMyReports(rows){
+  myReports = rows || [];
+  const wrap = document.getElementById('my-reports-wrap');
+  if(!myReports.length){
+    wrap.innerHTML='<p style="font-size:12px;color:#aaa">조회된 보고서가 없습니다.</p>';
+    return;
+  }
+  const sorted = [...myReports].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  wrap.innerHTML = `
+    <table class="ltbl">
+      <thead><tr>
+        <th>날짜</th><th>유형</th><th>사유</th><th>외근지</th>
+        <th>제출시간</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${sorted.map((r,i)=>`
+          <tr>
+            <td style="white-space:nowrap">${r.date||''}</td>
+            <td>${typeBadge(r.type||'')}</td>
+            <td style="max-width:200px">${r.reason&&r.reason!=='-'?r.reason:'-'}</td>
+            <td>${r.type==='외근'&&r.location&&r.location!=='-'?r.location:'-'}</td>
+            <td style="font-size:11px;color:var(--muted);white-space:nowrap">${r.submittedAt||''}</td>
+            <td style="display:flex;gap:6px;flex-wrap:wrap;min-width:100px">
+              <button class="btn btn-sm" onclick="openEditModal(${i})">수정</button>
+              <button class="btn btn-sm" style="color:#9B2C2C;border-color:#FCA5A5" onclick="deleteReport('${r.id}')">삭제</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+/* ── 수정 모달 ── */
+function openEditModal(idx){
+  const r = myReports[idx];
+  if(!r) return;
+  editingReportId = r.id;
+  document.getElementById('em-email').value    = '';
+  document.getElementById('em-date').value     = r.date  || '';
+  document.getElementById('em-type').value     = r.type  || '연차';
+  document.getElementById('em-reason').value   = (r.reason  === '-') ? '' : (r.reason  || '');
+  document.getElementById('em-location').value = (r.location === '-') ? '' : (r.location || '');
+  document.getElementById('em-status').textContent = '';
+  toggleEditLocation();
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+function closeEditModal(){
+  document.getElementById('edit-modal').style.display = 'none';
+  editingReportId = null;
+}
+function handleModalOverlayClick(e){
+  if(e.target === document.getElementById('edit-modal')) closeEditModal();
+}
+
+/* ── 보고서 수정 ── */
+async function updateReport(){
+  const url = getGasUrl();
+  if(!url || !editingReportId) return;
+
+  const email    = document.getElementById('em-email').value.trim();
+  const date     = document.getElementById('em-date').value;
+  const type     = document.getElementById('em-type').value;
+  const reason   = document.getElementById('em-reason').value.trim();
+  const location = document.getElementById('em-location').value.trim();
+  const s        = document.getElementById('em-status');
+
+  if(!email){ s.textContent='이메일을 입력하세요.'; return; }
+  if(!date) { s.textContent='날짜를 입력하세요.';   return; }
+  if(type==='외근' && !location){ s.textContent='외근지를 입력하세요.'; return; }
+
+  s.textContent='수정 중...'; s.style.color='var(--muted)';
+
+  try {
+    const res  = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action:'update', id:editingReportId, email, date, type, reason, location }),
+      redirect: 'follow'
+    });
+    const data = await res.json();
+    if(data.success){
+      closeEditModal();
+      alert('✅ 수정 완료!');
+      fetchMyReports();
+    } else {
+      s.textContent = '❌ ' + (data.error || '오류 발생');
+      s.style.color = '#c0392b';
+    }
+  } catch(err) {
+    s.textContent = '❌ 연결 오류: ' + err.message;
+    s.style.color = '#c0392b';
+  }
+}
+
+/* ── 보고서 삭제 ── */
+async function deleteReport(id){
+  const url = getGasUrl();
+  if(!url){ alert('먼저 Apps Script URL을 설정하세요.'); return; }
+  if(!confirm('정말 삭제하시겠습니까?\n삭제를 위해 이메일 확인이 필요합니다.')) return;
+
+  const confirmEmail = prompt('등록한 이메일을 입력하세요:');
+  if(!confirmEmail) return;
+
+  try {
+    const res  = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action:'delete', id, email:confirmEmail }),
+      redirect: 'follow'
+    });
+    const data = await res.json();
+    if(data.success){
+      alert('🗑️ 삭제 완료!');
+      fetchMyReports();
+    } else {
+      alert('❌ ' + (data.error || '삭제 실패. 이메일을 확인하세요.'));
+    }
+  } catch(err) {
+    alert('❌ 연결 오류: ' + err.message);
+  }
 }
 
 /* ═══════════════════════════════
