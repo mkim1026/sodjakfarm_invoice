@@ -293,8 +293,8 @@ body {
 .doc-sig-block .st { font-weight:700; font-size:10px; color:#000; margin-bottom:10px; }
 .doc-sig-line { display:flex; align-items:flex-end; gap:8px; font-size:10px; color:#111; margin-bottom:12px; }
 .doc-sig-line .sig-label { white-space:nowrap; width:82px; flex-shrink:0; }
-.doc-sig-line .sig-note { margin-left:8px; font-style:normal; color:#000; white-space:nowrap; }
-.doc-sig-line .sig-line-bar { display:block; flex:1; min-width:120px; border-bottom:1px solid #222; }
+.doc-sig-line .sig-note { width:80px; flex-shrink:0; font-style:normal; color:#000; white-space:nowrap; }
+.doc-sig-line .sig-line-bar { display:block; flex:1; border-bottom:1px solid #222; }
 .doc-copy { font-size:9px; color:#777; text-align:right; margin-bottom:6px; font-style:italic; }
 .doc-bottom { margin-top: auto; }
 
@@ -779,7 +779,7 @@ function nav(k){
   document.querySelectorAll('.sb-item').forEach((el,i)=>el.classList.toggle('active',i===NAV_IDX[k]));
   if(k==='dashboard') renderDash();
   if(k==='list') renderList();
-  if(k==='new'){ initForm(); renderCustSel(); }
+  if(k==='new'){ initForm(); loadSheetsCustomers(); }
   if(k==='settings') renderLogoSettings();
 }
 
@@ -883,23 +883,52 @@ function calc(){
 function renderTotals(){ calc(); }
 
 /* ═══════════════════════════════
+   GOOGLE SHEETS
+═══════════════════════════════ */
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwBiqkkOfZbxn4UW-CsYetUVFPTPKosVc4sqiUHuX5UqsqN6RtiI54FV-_e2MZZoNOD/exec';
+let sheetsCustomers = [];
+
+async function loadSheetsCustomers(){
+  const s = document.getElementById('cust-sel');
+  s.innerHTML = '<option value="">불러오는 중...</option>';
+  try {
+    const res = await fetch(`${SHEETS_URL}?action=getCustomers`);
+    sheetsCustomers = await res.json();
+    renderCustSel();
+  } catch(e) {
+    s.innerHTML = '<option value="">불러오기 실패 (수동 입력)</option>';
+  }
+}
+
+/* ═══════════════════════════════
    CUSTOMER SELECT
 ═══════════════════════════════ */
 function renderCustSel(){
   const s=document.getElementById('cust-sel');
   s.innerHTML='<option value="">-- Enter Manually --</option>'+
-    db.customers.map((c,i)=>`<option value="${i}">${c.name} (${c.type==='b2b'?'B2B':'Individual'})</option>`).join('');
+    sheetsCustomers.map((c,i)=>`<option value="${i}">${c.name} (B2B)</option>`).join('');
   populateInvoiceFilters();
 }
-function fillCust(){
+
+async function fillCust(){
   const i=document.getElementById('cust-sel').value;
   if(i==='') return;
-  const c=db.customers[+i];
-  document.getElementById('f-bt').value=c.name;
+  const c=sheetsCustomers[+i];
+  document.getElementById('f-bt').value=c.name||'';
   document.getElementById('f-mob').value=c.mobile||'';
   document.getElementById('f-em').value=c.email||'';
   document.getElementById('f-terms').value=(c.terms&&c.terms.trim())?c.terms:defaultTermsText();
-  rows.forEach((r,idx)=>{ if(r.product) autoPrice(idx,r.product); });
+
+  try {
+    const res = await fetch(`${SHEETS_URL}?action=getCustomerProducts&name=${encodeURIComponent(c.name)}`);
+    const products = await res.json();
+    if(products.length){
+      rows = products.map(p=>({ product:p.name, price:p.price, qty:1 }));
+      renderRows();
+    }
+  } catch(e) {
+    console.error('상품 불러오기 실패', e);
+  }
 }
 
 /* ═══════════════════════════════
@@ -979,14 +1008,14 @@ function docHTML(inv, title, copyLabel){
         <div class="doc-sig-block">
           <div class="st">Customer</div>
           <div class="doc-sig-line"><span class="sig-label">Received by</span><span class="sig-line-bar"></span><em class="sig-note">(signature)</em></div>
-          <div class="doc-sig-line"><span class="sig-label">Position (Dept.)</span><span class="sig-line-bar"></span></div>
-          <div class="doc-sig-line"><span class="sig-label">Date</span><span class="sig-line-bar"></span></div>
+          <div class="doc-sig-line"><span class="sig-label">Position (Dept.)</span><span class="sig-line-bar"></span><span class="sig-note"></span></div>
+          <div class="doc-sig-line"><span class="sig-label">Date</span><span class="sig-line-bar"></span><span class="sig-note"></span></div>
         </div>
         <div class="doc-sig-block">
           <div class="st">Supplier</div>
           <div class="doc-sig-line"><span class="sig-label">Delivered by</span><span class="sig-line-bar"></span><em class="sig-note">(signature)</em></div>
-          <div class="doc-sig-line"><span class="sig-label">Position (Dept.)</span><span class="sig-line-bar"></span></div>
-          <div class="doc-sig-line"><span class="sig-label">Date</span><span class="sig-line-bar"></span></div>
+          <div class="doc-sig-line"><span class="sig-label">Position (Dept.)</span><span class="sig-line-bar"></span><span class="sig-note"></span></div>
+          <div class="doc-sig-line"><span class="sig-label">Date</span><span class="sig-line-bar"></span><span class="sig-note"></span></div>
         </div>
       </div>
     </div>` : `
