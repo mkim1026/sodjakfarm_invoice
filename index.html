@@ -779,7 +779,7 @@ function nav(k){
   document.querySelectorAll('.sb-item').forEach((el,i)=>el.classList.toggle('active',i===NAV_IDX[k]));
   if(k==='dashboard') renderDash();
   if(k==='list') renderList();
-  if(k==='new'){ initForm(); renderCustSel(); }
+  if(k==='new'){ initForm(); loadSheetsCustomers(); }
   if(k==='settings') renderLogoSettings();
 }
 
@@ -883,23 +883,52 @@ function calc(){
 function renderTotals(){ calc(); }
 
 /* ═══════════════════════════════
+   GOOGLE SHEETS
+═══════════════════════════════ */
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwBiqkkOfZbxn4UW-CsYetUVFPTPKosVc4sqiUHuX5UqsqN6RtiI54FV-_e2MZZoNOD/exec';
+let sheetsCustomers = [];
+
+async function loadSheetsCustomers(){
+  const s = document.getElementById('cust-sel');
+  s.innerHTML = '<option value="">불러오는 중...</option>';
+  try {
+    const res = await fetch(`${SHEETS_URL}?action=getCustomers`);
+    sheetsCustomers = await res.json();
+    renderCustSel();
+  } catch(e) {
+    s.innerHTML = '<option value="">불러오기 실패 (수동 입력)</option>';
+  }
+}
+
+/* ═══════════════════════════════
    CUSTOMER SELECT
 ═══════════════════════════════ */
 function renderCustSel(){
   const s=document.getElementById('cust-sel');
   s.innerHTML='<option value="">-- Enter Manually --</option>'+
-    db.customers.map((c,i)=>`<option value="${i}">${c.name} (${c.type==='b2b'?'B2B':'Individual'})</option>`).join('');
+    sheetsCustomers.map((c,i)=>`<option value="${i}">${c.name} (B2B)</option>`).join('');
   populateInvoiceFilters();
 }
-function fillCust(){
+
+async function fillCust(){
   const i=document.getElementById('cust-sel').value;
   if(i==='') return;
-  const c=db.customers[+i];
-  document.getElementById('f-bt').value=c.name;
+  const c=sheetsCustomers[+i];
+  document.getElementById('f-bt').value=c.name||'';
   document.getElementById('f-mob').value=c.mobile||'';
   document.getElementById('f-em').value=c.email||'';
   document.getElementById('f-terms').value=(c.terms&&c.terms.trim())?c.terms:defaultTermsText();
-  rows.forEach((r,idx)=>{ if(r.product) autoPrice(idx,r.product); });
+
+  try {
+    const res = await fetch(`${SHEETS_URL}?action=getCustomerProducts&name=${encodeURIComponent(c.name)}`);
+    const products = await res.json();
+    if(products.length){
+      rows = products.map(p=>({ product:p.name, price:p.price, qty:1 }));
+      renderRows();
+    }
+  } catch(e) {
+    console.error('상품 불러오기 실패', e);
+  }
 }
 
 /* ═══════════════════════════════
