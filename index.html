@@ -549,10 +549,9 @@ body {
   <div class="card non-print">
     <div class="ct">라벨 편집</div>
     <div class="label-controls">
-      <div class="field"><label>선택 칸 번호</label><input id="label-selected" value="미선택" readonly></div>
       <div class="field"><label>글자 크기 (px)</label><input id="label-font-size" type="number" min="8" max="36" value="10" oninput="applyLabelStyle()"></div>
       <div class="field"><label>글자 색상</label><input id="label-color" type="color" value="#1a1a1a" oninput="applyLabelStyle()"></div>
-      <div class="field"><label>내용</label><input id="label-text" placeholder="선택한 칸 텍스트" oninput="applyLabelText()"></div>
+      <div class="field"><label>선택 칸</label><input id="label-selected" value="1 / 65" readonly></div>
     </div>
     <div class="label-tools">
       <button class="btn btn-sm" onclick="clearSelectedLabel()">선택 칸 비우기</button>
@@ -999,7 +998,8 @@ function renderLabelSheet(){
     ta.style.fontSize=cell.fontSize+'px';
     ta.style.color=cell.color;
     ta.onfocus=()=>selectLabel(idx);
-    ta.oninput=(e)=>{ labelData[idx].text=e.target.value; updateUsedCount(); if(idx===selectedLabelIdx) document.getElementById('label-text').value=e.target.value; };
+    ta.oninput=(e)=>{ labelData[idx].text=e.target.value; updateUsedCount(); };
+    d.onclick=()=>{ selectLabel(idx); ta.focus(); };
     d.appendChild(ta);
     host.appendChild(d);
   });
@@ -1013,14 +1013,8 @@ function selectLabel(idx){
   selectedLabelIdx=idx;
   const cell=labelData[idx];
   document.getElementById('label-selected').value=(idx+1)+' / 65';
-  document.getElementById('label-text').value=cell.text;
   document.getElementById('label-font-size').value=cell.fontSize;
   document.getElementById('label-color').value=cell.color;
-  renderLabelSheet();
-}
-function applyLabelText(){
-  if(selectedLabelIdx<0) return;
-  labelData[selectedLabelIdx].text=document.getElementById('label-text').value;
   renderLabelSheet();
 }
 function applyLabelStyle(){
