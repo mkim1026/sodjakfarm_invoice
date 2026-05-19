@@ -302,8 +302,9 @@ body {
 /* ── LABEL PRINT ── */
 .label-controls { display:grid; grid-template-columns:repeat(4,minmax(120px,1fr)); gap:10px; margin-bottom:14px; align-items:end; }
 .label-sheet { background:#fff; border:1px solid #dde8d4; border-radius:10px; width:210mm; min-height:297mm; padding:11mm 5mm; margin:0 auto 16px; display:grid; grid-template-columns:repeat(5,38mm); grid-auto-rows:21mm; column-gap:2.2mm; row-gap:0; }
-.label-cell { border:1px dashed #d6dfcf; padding:2mm; line-height:1.3; display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden; white-space:pre-wrap; word-break:break-word; cursor:text; }
-.label-cell.empty { border-color:transparent; }
+.label-cell { border:1px dashed #d6dfcf; padding:1.2mm; overflow:hidden; }
+.label-cell textarea { width:100%; height:100%; border:none; outline:none; resize:none; background:transparent; text-align:center; line-height:1.25; font-family:inherit; }
+.label-cell.active { outline:2px solid #3D6B20; outline-offset:-2px; }
 .label-meta { font-size:11px; color:var(--muted); margin-bottom:8px; }
 .label-tools { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .label-tools input[type="number"] { width:90px; }
@@ -328,6 +329,8 @@ body {
   }
   .doc-tbl thead tr, .itbl thead tr, .doc-grand { background:#175933 !important; color:#fff !important; }
   .brow { display:none; }
+  .label-cell { border:none !important; padding:1.6mm; }
+  .label-cell textarea { pointer-events:none; }
   .page-break { page-break-before: always; }
 }
 </style>
@@ -556,7 +559,7 @@ body {
       <button class="btn btn-sm" onclick="clearAllLabels()">전체 비우기</button>
       <span class="label-meta">총 65칸 중 <strong id="label-used">0</strong>칸 사용</span>
     </div>
-    <p class="label-meta" style="margin-top:8px">칸을 클릭해서 내용/크기/색상을 개별 설정하세요. 인쇄 배율 100%, 여백 없음(또는 최소) 권장.</p>
+    <p class="label-meta" style="margin-top:8px">65칸이 모두 개별 입력칸으로 표시됩니다. 각 칸에 직접 입력하고, 클릭 후 크기/색상을 조정하세요. 인쇄 배율 100%, 여백 없음(또는 최소) 권장.</p>
     <div class="brow" style="margin-top:10px"><button class="btn" onclick="window.print()">🖨 인쇄</button></div>
   </div>
   <div id="label-sheet" class="label-sheet"></div>
@@ -981,7 +984,7 @@ let selectedLabelIdx=-1;
 
 function initLabels(){
   renderLabelSheet();
-  selectLabel(0);
+  selectLabel(selectedLabelIdx>=0?selectedLabelIdx:0);
 }
 function renderLabelSheet(){
   const host=document.getElementById('label-sheet');
@@ -990,13 +993,20 @@ function renderLabelSheet(){
   host.innerHTML='';
   labelData.forEach((cell,idx)=>{
     const d=document.createElement('div');
-    d.className='label-cell'+(cell.text?'':' empty');
-    d.textContent=cell.text;
-    d.style.fontSize=cell.fontSize+'px';
-    d.style.color=cell.color;
-    d.onclick=()=>selectLabel(idx);
+    d.className='label-cell'+(idx===selectedLabelIdx?' active':'');
+    const ta=document.createElement('textarea');
+    ta.value=cell.text;
+    ta.style.fontSize=cell.fontSize+'px';
+    ta.style.color=cell.color;
+    ta.onfocus=()=>selectLabel(idx);
+    ta.oninput=(e)=>{ labelData[idx].text=e.target.value; updateUsedCount(); if(idx===selectedLabelIdx) document.getElementById('label-text').value=e.target.value; };
+    d.appendChild(ta);
     host.appendChild(d);
   });
+  updateUsedCount();
+}
+function updateUsedCount(){
+  const used=document.getElementById('label-used');
   if(used) used.textContent=String(labelData.filter(v=>v.text.trim()).length);
 }
 function selectLabel(idx){
@@ -1006,32 +1016,27 @@ function selectLabel(idx){
   document.getElementById('label-text').value=cell.text;
   document.getElementById('label-font-size').value=cell.fontSize;
   document.getElementById('label-color').value=cell.color;
-  document.querySelectorAll('#label-sheet .label-cell').forEach((el,i)=>{
-    el.style.outline=i===idx?'2px solid #3D6B20':'none';
-    el.style.outlineOffset=i===idx?'-2px':'0';
-  });
+  renderLabelSheet();
 }
 function applyLabelText(){
   if(selectedLabelIdx<0) return;
   labelData[selectedLabelIdx].text=document.getElementById('label-text').value;
   renderLabelSheet();
-  selectLabel(selectedLabelIdx);
 }
 function applyLabelStyle(){
   if(selectedLabelIdx<0) return;
   labelData[selectedLabelIdx].fontSize=Number(document.getElementById('label-font-size').value)||10;
   labelData[selectedLabelIdx].color=document.getElementById('label-color').value||'#1a1a1a';
   renderLabelSheet();
-  selectLabel(selectedLabelIdx);
 }
 function clearSelectedLabel(){
   if(selectedLabelIdx<0) return;
-  labelData[selectedLabelIdx]={...labelData[selectedLabelIdx],text:''};
+  labelData[selectedLabelIdx].text='';
   renderLabelSheet();
-  selectLabel(selectedLabelIdx);
 }
 function clearAllLabels(){
   labelData=Array.from({length:LABEL_TOTAL},()=>({text:'',fontSize:10,color:'#1a1a1a'}));
+  selectedLabelIdx=0;
   renderLabelSheet();
   selectLabel(0);
 }
