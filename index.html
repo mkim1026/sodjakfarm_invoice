@@ -15,6 +15,7 @@
   --g-pale: #EAF3DE; --g-row: #F5F9F2;
   --border: #CCCCCC; --text: #1A1A1A; --muted: #555555;
   --rate: 22000;
+  --doc-line: #175933;   /* every line on Invoice / Delivery Note: this green or black */
 }
 body {
   font-family: 'Noto Sans', sans-serif;
@@ -225,7 +226,7 @@ body {
 
 /* billing grid */
 .doc-bill { display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; margin-bottom:18px; }
-.doc-field { display:flex; gap:5px; border-bottom:1px solid #DDD; padding-bottom:4px; font-size:10px; }
+.doc-field { display:flex; gap:5px; border-bottom:1px solid var(--doc-line); padding-bottom:4px; font-size:10px; }
 .doc-field .fl { font-weight:700; white-space:nowrap; color:#333; }
 .doc-field .fv { color:#555; }
 
@@ -235,7 +236,9 @@ body {
 .doc-tbl th { padding:6px 8px; text-align:left; font-weight:600; font-size:10px; }
 .doc-tbl th.r { text-align:right; }
 .doc-tbl th.c { text-align:center; }
-.doc-tbl td { padding:5px 8px; border-bottom:1px solid #E8E8E8; }
+.doc-tbl td { padding:5px 8px; border-bottom:1px solid var(--doc-line); }
+.doc-tbl td.diff { color:#9B2C2C; }
+.doc-tbl-note { font-size:9px; color:#9B2C2C; margin:-4px 0 10px; }
 .doc-tbl td.r { text-align:right; font-weight:600; }
 .doc-tbl td.c { text-align:center; }
 .doc-tbl tbody tr:nth-child(even) td { background:#F5F9F2; }
@@ -255,7 +258,7 @@ body {
 .doc-usd { font-size:9px; color:#666; text-align:right; margin-top:3px; }
 
 /* terms */
-.doc-terms { border:1px solid #DDD; padding:9px 10px; border-radius:4px; margin-bottom:24px; min-height:110px; }
+.doc-terms { border:1px solid var(--doc-line); padding:9px 10px; border-radius:4px; margin-bottom:24px; min-height:110px; }
 .doc-terms .dt { font-weight:700; font-size:10px; margin-bottom:5px; }
 .doc-terms p { font-size:9px; color:#444; line-height:1.65; margin-bottom:2px; }
 
@@ -266,14 +269,14 @@ body {
 .doc-bank-row > :nth-child(3) { margin-left: 32px; } /* increase spacing between first QR and next bank info */
 .doc-bank-item { font-size:9px; color:#333; line-height:1.7; }
 .doc-bank-item strong { font-size:10px; color:var(--g1); }
-.doc-bank-qr { border:1px dashed #9fb7a3; border-radius:6px; min-height:110px; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; text-align:center; font-size:9px; color:#5a6d5d; background:#fafdf9; padding:6px; }
+.doc-bank-qr { border:1px dashed var(--doc-line); border-radius:6px; min-height:110px; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; text-align:center; font-size:9px; color:#5a6d5d; background:#fafdf9; padding:6px; }
 .doc-bank-qr .qrl { font-weight:700; color:#2d5039; margin-bottom:3px; display:block; }
 .doc-bank-qr { overflow:hidden; }
 .doc-bank-qr img { width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block; }
 
 /* footer */
 .doc-footer {
-  border-top:2px solid var(--g3); padding-top:8px;
+  border-top:2px solid var(--doc-line); padding-top:8px;
   display:grid; grid-template-columns:106px 1fr; gap:12px; align-items:center;
   text-align:left; font-size:9px; color:#555;
   line-height:1.8;
@@ -298,6 +301,17 @@ body {
 .doc-copy { font-size:9px; color:#777; text-align:right; margin-bottom:6px; font-style:italic; }
 .doc-bottom { margin-top: auto; }
 
+
+/* ── SHEET ORDERS ── */
+.sh-dates { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.sh-chip { border:1px solid #dde8d4; background:#fff; border-radius:14px; padding:4px 10px; font-size:11px; cursor:pointer; color:var(--text); font-family:inherit; }
+.sh-chip.on { background:var(--g1); border-color:var(--g1); color:#fff; }
+.sh-chip .pd { color:#B7791F; font-weight:700; }
+.sh-chip.on .pd { color:#FBD38D; }
+.sh-flag { display:inline-block; font-size:10px; padding:2px 7px; border-radius:10px; margin:1px 2px 1px 0; white-space:nowrap; }
+.sh-flag.ok { background:var(--g-pale); color:var(--g1); }
+.sh-flag.warn { background:#FEF3C7; color:#92400E; }
+.sh-flag.err { background:#FDE2E1; color:#9B2C2C; }
 
 /* ── LABEL PRINT ── */
 .label-controls { display:grid; grid-template-columns:repeat(4,minmax(120px,1fr)); gap:10px; margin-bottom:14px; align-items:end; }
@@ -350,6 +364,10 @@ body {
       <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
       Dashboard
     </div>
+    <div class="sb-item" onclick="nav('sheet')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.5h12a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5V2a.5.5 0 0 1 .5-.5zM3 3v2.5h4V3H3zm5.5 0v2.5H13V3H8.5zM3 7v2.5h4V7H3zm5.5 0v2.5H13V7H8.5zM3 11v2h4v-2H3zm5.5 0v2H13v-2H8.5z"/></svg>
+      Sheet Orders
+    </div>
     <div class="sb-item" onclick="nav('new')">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm1 4H7v2H5v2h2v2h2V9h2V7H9V5z"/></svg>
       New Invoice
@@ -399,6 +417,30 @@ body {
     <table class="ltbl">
       <thead><tr><th>Invoice No.</th><th>Customer</th><th>Issue Date</th><th>Amount (LAK)</th><th>Status</th></tr></thead>
       <tbody id="dash-tbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa">No invoices found</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Sheet Orders (B2B Google Sheet) ── -->
+<section class="page" id="pg-sheet">
+  <div class="ph"><h1>Sheet Orders</h1><p>B2B orders from the Google Sheet → Invoice + Delivery Note</p></div>
+  <div class="card">
+    <div class="fr fr3">
+      <div class="field"><label>Delivery Date</label><input id="sh-date" type="date" onchange="loadSheetDay()"></div>
+      <div class="field"><label>or Invoice No.</label><input id="sh-no" placeholder="2026-TG-100901" onkeydown="if(event.key==='Enter')loadSheetInvoiceNo()"></div>
+      <div class="field" style="justify-content:flex-end"><button class="btn" style="height:36px" onclick="reloadSheet()">↻ Reload from Sheet</button></div>
+    </div>
+    <div id="sh-dates" class="sh-dates"></div>
+    <p id="sh-status" class="logo-hint"></p>
+  </div>
+  <div class="card">
+    <div class="brow" style="margin-bottom:12px;justify-content:space-between;align-items:center">
+      <div class="ct" style="margin:0;padding:0;border:none" id="sh-title">Invoices</div>
+      <button class="btn btn-g" id="sh-print-all" onclick="printSheetAll()" disabled>🖨 Print All</button>
+    </div>
+    <table class="ltbl">
+      <thead><tr><th>Invoice No.</th><th>Customer</th><th>PO No.</th><th>Items</th><th style="text-align:right">Total (LAK)</th><th>Check</th><th></th></tr></thead>
+      <tbody id="sh-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">Pick a delivery date</td></tr></tbody>
     </table>
   </div>
 </section>
@@ -481,6 +523,7 @@ body {
     <button class="btn btn-g" onclick="window.print()">🖨 Print / Save PDF</button>
     <button class="btn" onclick="nav('new')">← Edit</button>
     <button class="btn" onclick="nav('list')">Back to List</button>
+    <button class="btn" onclick="nav('sheet')">Sheet Orders</button>
   </div>
   <div id="print-area"></div>
 </section>
@@ -585,6 +628,19 @@ body {
       </div>
     </div>
     <p class="logo-hint" id="logo-status"></p>
+  </div>
+  <div class="card">
+    <div class="ct">Google Sheet – B2B Orders</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Web app URL and token of the Apps Script in the order spreadsheet (see <code>apps-script/Code.gs</code>). Saved in this browser only.</p>
+    <div class="fr fr2">
+      <div class="field"><label>Apps Script Web App URL *</label><input id="sheet-url" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      <div class="field"><label>Token *</label><input id="sheet-token" type="password" placeholder="Same as TOKEN in Code.gs"></div>
+    </div>
+    <div class="brow" style="margin-top:12px">
+      <button class="btn btn-g" onclick="saveSheetSettings()">Save</button>
+      <button class="btn" onclick="testSheetConnection()">Test Connection</button>
+    </div>
+    <p id="sheet-cfg-status" class="logo-hint"></p>
   </div>
   <div class="card">
     <div class="ct">Google Drive Integration (Apps Script)</div>
@@ -762,6 +818,7 @@ function renderLogoSettings() {
   if(ep) ep.value=cloudCfg.endpoint||'';
   if(tk) tk.value=cloudCfg.token||'';
   setCloudStatus(isCloudEnabled()?'Google Drive connection settings are saved.':'Google Drive not connected');
+  renderSheetSettings();
 }
 function setCloudStatus(msg, isErr=false){
   const el=document.getElementById('cloud-status');
@@ -811,8 +868,8 @@ async function backupToCloud(){
 /* ═══════════════════════════════
    NAV
 ═══════════════════════════════ */
-const PAGES={dashboard:'pg-dashboard',new:'pg-new',list:'pg-list',print:'pg-print',customers:'pg-customers',products:'pg-products',labels:'pg-labels',settings:'pg-settings'};
-const NAV_IDX={dashboard:0,new:1,list:2,customers:3,products:4,labels:5,settings:6};
+const PAGES={dashboard:'pg-dashboard',sheet:'pg-sheet',new:'pg-new',list:'pg-list',print:'pg-print',customers:'pg-customers',products:'pg-products',labels:'pg-labels',settings:'pg-settings'};
+const NAV_IDX={dashboard:0,sheet:1,new:2,list:3,customers:4,products:5,labels:6,settings:7};
 function nav(k){
   if(k==='settings' && !ensureSettingsAccess()) return;
   Object.values(PAGES).forEach(id=>document.getElementById(id).classList.remove('active'));
@@ -823,6 +880,7 @@ function nav(k){
   if(k==='new'){ initForm(); loadSheetsCustomers(); }
   if(k==='labels') initLabels();
   if(k==='settings') renderLogoSettings();
+  if(k==='sheet') initSheetPage();
 }
 
 /* ═══════════════════════════════
@@ -1087,24 +1145,33 @@ function resetForm(){
 function docHTML(inv, title, copyLabel){
   const {sub,vat,total}=calcDoc(inv);
   const logo = getLogo();
-  const MAX=8;
-  let rowsHTML='';
+  const isDN = title==='Delivery Note';
+  // sheet orders: the invoice bills delivered lines only; the delivery note lists every ordered line
+  const items = (inv.fromSheet && !isDN) ? inv.items.filter(it=>Number(it.qty)>0) : inv.items;
+  const showOrdered = inv.fromSheet && isDN;
+  const MAX=Math.max(8, items.length);
+  const cols = showOrdered ? 6 : 5;
+  let rowsHTML='', anyDiff=false;
   for(let i=0;i<MAX;i++){
-    const it=inv.items[i];
+    const it=items[i];
     const bg=i%2===1?' style="background:#F5F9F2"':'';
     if(it){
+      const diff = showOrdered && it.ordered!=null && Number(it.ordered)!==Number(it.qty);
+      if(diff) anyDiff=true;
       rowsHTML+=`<tr${bg}><td>${i+1}</td><td>${it.product}</td>
-        <td class="r">${fmtN(it.price)}</td><td class="c">${it.qty}</td>
+        <td class="r">${fmtN(it.price)}</td>
+        ${showOrdered?`<td class="c">${it.ordered??''}</td>`:''}
+        <td class="c${diff?' diff':''}">${it.qty}${diff?' *':''}</td>
         <td class="r">${fmtN(it.price*it.qty)}</td></tr>`;
     } else {
-      rowsHTML+=`<tr${bg}><td>${i+1}</td><td></td><td></td><td></td><td></td></tr>`;
+      rowsHTML+=`<tr${bg}>${'<td></td>'.repeat(cols).replace('<td></td>',`<td>${i+1}</td>`)}</tr>`;
     }
   }
 
   const termLines=(inv.termsText||defaultTermsText()).split('\n').map(s=>s.trim()).filter(Boolean).slice(0,5);
   while(termLines.length<5) termLines.push('');
   const termsHTML=termLines.map(s=>s?`<p>• ${s.replace(/^•\s*/,'')}</p>`:'<p>&nbsp;</p>').join('');
-  const ackHTML = title==='Delivery Note' ? `
+  const ackHTML = isDN ? `
     <div class="doc-ack">
       <div class="dat">Acknowledgement</div>
       <div class="dsub">The undersigned acknowledges receipt of the goods listed above in good condition.</div>
@@ -1186,11 +1253,14 @@ function docHTML(inv, title, copyLabel){
         <th style="width:28px">No.</th>
         <th style="width:42%;text-align:center">Product</th>
         <th class="r" style="width:90px">Unit Price</th>
-        <th class="c" style="width:60px">Quantity</th>
+        ${showOrdered
+          ? '<th class="c" style="width:60px">Ordered</th><th class="c" style="width:60px">Delivered</th>'
+          : '<th class="c" style="width:60px">Quantity</th>'}
         <th class="r" style="width:90px">Total Price</th>
       </tr></thead>
       <tbody>${rowsHTML}</tbody>
     </table>
+    ${anyDiff?'<div class="doc-tbl-note">* Delivered quantity differs from the ordered quantity.</div>':''}
 
     <div class="doc-totals">
       <div class="doc-trow"><span class="tl">Subtotal (LAK)</span><span class="tv">${fmtN(sub)}</span></div>
@@ -1222,13 +1292,194 @@ function docHTML(inv, title, copyLabel){
   </div>`;
 }
 
-function renderPreview(inv){
-  document.getElementById('print-area').innerHTML =
-    docHTML(inv,'INVOICE','') +
+function docSetHTML(inv){
+  return docHTML(inv,'INVOICE','') +
     '<div class="page-break"></div>' +
     docHTML(inv,'Delivery Note','Copy 1 of 2 (For Customer)') +
     '<div class="page-break"></div>' +
     docHTML(inv,'Delivery Note','Copy 2 of 2 (For Supplier)');
+}
+function renderPreview(inv){ renderPreviewMany([inv]); }
+function renderPreviewMany(invs){
+  document.getElementById('print-area').innerHTML =
+    invs.map(docSetHTML).join('<div class="page-break"></div>');
+}
+
+/* ═══════════════════════════════
+   SHEET ORDERS (B2B Google Sheet, read only)
+═══════════════════════════════ */
+const SHEET_CFG_KEY='tgc_sheet_cfg';
+let sheetCfg={url:'',token:''};
+let sheetInvoices=[];
+let sheetDates=[];
+function loadSheetCfg(){
+  try{ const r=localStorage.getItem(SHEET_CFG_KEY); if(r) sheetCfg={...sheetCfg,...JSON.parse(r)}; }catch(e){}
+}
+loadSheetCfg();
+function renderSheetSettings(){
+  const u=document.getElementById('sheet-url'), t=document.getElementById('sheet-token');
+  if(u) u.value=sheetCfg.url||'';
+  if(t) t.value=sheetCfg.token||'';
+  setSheetCfgStatus(sheetCfg.url?'Connected sheet saved in this browser.':'Not connected');
+}
+function setSheetCfgStatus(msg,isErr=false){
+  const el=document.getElementById('sheet-cfg-status');
+  if(!el) return;
+  el.style.color=isErr?'#9B2C2C':'var(--muted)';
+  el.textContent=msg;
+}
+function saveSheetSettings(){
+  sheetCfg.url=document.getElementById('sheet-url').value.trim();
+  sheetCfg.token=document.getElementById('sheet-token').value.trim();
+  try{ localStorage.setItem(SHEET_CFG_KEY,JSON.stringify(sheetCfg)); }catch(e){}
+  setSheetCfgStatus(sheetCfg.url?'Saved':'Connection removed');
+}
+async function testSheetConnection(){
+  saveSheetSettings();
+  try{
+    setSheetCfgStatus('Testing...');
+    const d=await sheetApi({action:'dates'});
+    setSheetCfgStatus(`✓ Connected – ${d.dates.length} delivery dates found`);
+  }catch(e){ setSheetCfgStatus('✗ '+e.message,true); }
+}
+async function sheetApi(params){
+  if(!sheetCfg.url) throw new Error('Google Sheet is not connected. Set it up in Settings.');
+  const u=new URL(sheetCfg.url);
+  Object.entries({...params, token:sheetCfg.token||''}).forEach(([k,v])=>u.searchParams.set(k,v));
+  const res=await fetch(u.toString());
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data=await res.json();
+  if(!data.ok) throw new Error(data.error==='unauthorized'?'Wrong token (check Settings)':data.error);
+  return data;
+}
+function localToday(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function esc(v){
+  return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function setSheetStatus(msg,isErr=false){
+  const el=document.getElementById('sh-status');
+  el.style.color=isErr?'#9B2C2C':'var(--muted)';
+  el.textContent=msg;
+}
+function initSheetPage(){
+  const d=document.getElementById('sh-date');
+  if(!d.value) d.value=localToday();
+  loadSheetDates();
+  loadSheetDay();
+}
+function reloadSheet(){
+  loadSheetDates();
+  if(document.getElementById('sh-no').value.trim()) loadSheetInvoiceNo(); else loadSheetDay();
+}
+async function loadSheetDates(){
+  try{
+    sheetDates=(await sheetApi({action:'dates'})).dates;
+    renderSheetDates();
+  }catch(e){ /* the day load shows the error */ }
+}
+function renderSheetDates(){
+  const cur=document.getElementById('sh-date').value;
+  document.getElementById('sh-dates').innerHTML=sheetDates.slice(0,14).map(d=>
+    `<button class="sh-chip${d.date===cur?' on':''}" onclick="pickSheetDate('${d.date}')">${d.date.slice(5)} · ${d.invoices}${d.pending?` <span class="pd">+${d.pending}</span>`:''}</button>`
+  ).join('');
+}
+function pickSheetDate(d){
+  document.getElementById('sh-date').value=d;
+  document.getElementById('sh-no').value='';
+  loadSheetDay();
+}
+async function loadSheetDay(){
+  const date=document.getElementById('sh-date').value;
+  if(!date) return;
+  document.getElementById('sh-no').value='';
+  await fetchSheetInvoices({action:'invoices',date}, `Delivery ${date}`);
+}
+async function loadSheetInvoiceNo(){
+  const no=document.getElementById('sh-no').value.trim();
+  if(!no){ loadSheetDay(); return; }
+  await fetchSheetInvoices({action:'invoices',no}, `Invoice ${no}`);
+}
+async function fetchSheetInvoices(params,label){
+  setSheetStatus('Loading from Google Sheet...');
+  document.getElementById('sh-print-all').disabled=true;
+  try{
+    sheetInvoices=(await sheetApi(params)).invoices;
+    document.getElementById('sh-title').textContent=label;
+    renderSheetList();
+    renderSheetDates();
+    setSheetStatus(`Loaded ${new Date().toLocaleTimeString()}`);
+  }catch(e){
+    sheetInvoices=[]; renderSheetList();
+    setSheetStatus(e.message,true);
+  }
+}
+function sheetChecks(s){
+  const out=[];
+  if(s.pending) out.push(['err','No invoice no. – run "Assign invoice numbers" in the sheet']);
+  const delivered=s.lines.filter(l=>Number(l.delivered)>0);
+  if(!delivered.length) out.push(['err','No delivered qty']);
+  if(delivered.some(l=>!Number(l.unitPrice))) out.push(['err','Unit price missing']);
+  if(s.lines.some(l=>l.ordered!=null && l.delivered!=null && Number(l.ordered)!==Number(l.delivered)))
+    out.push(['warn','Ordered ≠ delivered']);
+  if(s.lines.some(l=>l.delivered==null)) out.push(['warn','Delivered qty blank on some lines']);
+  return out;
+}
+function sheetCanPrint(s){ return !sheetChecks(s).some(c=>c[0]==='err'); }
+function sheetTotal(s){
+  const sub=s.lines.reduce((a,l)=>a+(Number(l.unitPrice)||0)*(Number(l.delivered)||0),0);
+  return sub+sub*(s.vatRate||0);
+}
+function renderSheetList(){
+  const tb=document.getElementById('sh-tbody');
+  if(!sheetInvoices.length){
+    tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">No orders for this date</td></tr>';
+    document.getElementById('sh-print-all').disabled=true;
+    return;
+  }
+  tb.innerHTML=sheetInvoices.map((s,i)=>{
+    const checks=sheetChecks(s);
+    const flags=checks.length?checks.map(([k,m])=>`<span class="sh-flag ${k}">${esc(m)}</span>`).join('')
+      :'<span class="sh-flag ok">OK</span>';
+    const ok=sheetCanPrint(s);
+    return `<tr>
+      <td><strong>${s.no?esc(s.no):'<span style="color:#aaa">—</span>'}</strong></td>
+      <td>${esc(s.billTo)}</td>
+      <td>${esc(s.poNo)}</td>
+      <td>${s.lines.map(l=>`${esc(l.product)} ${l.delivered??'–'}${l.ordered!=null&&Number(l.ordered)!==Number(l.delivered)?`<span style="color:#9B2C2C">/${l.ordered}</span>`:''}`).join('<br>')}</td>
+      <td style="text-align:right">${fmtN(sheetTotal(s))}</td>
+      <td>${flags}</td>
+      <td><button class="btn btn-sm${ok?' btn-g':''}" ${ok?'':'disabled'} onclick="printSheetOne(${i})">🖨 Print</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('sh-print-all').disabled=!sheetInvoices.some(sheetCanPrint);
+}
+function sheetToInv(s){
+  return {
+    no:esc(s.no), billTo:esc(s.billTo), orderNo:esc(s.poNo),
+    mobile:esc(s.mobile), email:esc(s.email),
+    issueDate:esc(s.deliveryDate), dueDate:esc(s.dueDate),
+    items:s.lines.map(l=>({
+      product:esc(l.name), price:Number(l.unitPrice)||0,
+      qty:Number(l.delivered)||0, ordered:l.ordered
+    })),
+    vatRate:s.vatRate||0, freight:0,
+    termsText:defaultTermsText(),
+    fromSheet:true
+  };
+}
+function printSheetOne(i){
+  renderPreviewMany([sheetToInv(sheetInvoices[i])]);
+  nav('print');
+}
+function printSheetAll(){
+  const list=sheetInvoices.filter(sheetCanPrint);
+  const skipped=sheetInvoices.length-list.length;
+  if(skipped && !confirm(`${skipped} order(s) have problems and will be skipped. Continue?`)) return;
+  renderPreviewMany(list.map(sheetToInv));
+  nav('print');
 }
 
 /* ═══════════════════════════════
