@@ -237,8 +237,6 @@ body {
 .doc-tbl th.r { text-align:right; }
 .doc-tbl th.c { text-align:center; }
 .doc-tbl td { padding:5px 8px; border-bottom:1px solid var(--doc-line); }
-.doc-tbl td.diff { color:#9B2C2C; }
-.doc-tbl-note { font-size:9px; color:#9B2C2C; margin:-4px 0 10px; }
 .doc-tbl td.r { text-align:right; font-weight:600; }
 .doc-tbl td.c { text-align:center; }
 .doc-tbl tbody tr:nth-child(even) td { background:#F5F9F2; }
@@ -1151,17 +1149,15 @@ function docHTML(inv, title, copyLabel){
   const showOrdered = inv.fromSheet && isDN;
   const MAX=Math.max(8, items.length);
   const cols = showOrdered ? 6 : 5;
-  let rowsHTML='', anyDiff=false;
+  let rowsHTML='';
   for(let i=0;i<MAX;i++){
     const it=items[i];
     const bg=i%2===1?' style="background:#F5F9F2"':'';
     if(it){
-      const diff = showOrdered && it.ordered!=null && Number(it.ordered)!==Number(it.qty);
-      if(diff) anyDiff=true;
       rowsHTML+=`<tr${bg}><td>${i+1}</td><td>${it.product}</td>
         <td class="r">${fmtN(it.price)}</td>
         ${showOrdered?`<td class="c">${it.ordered??''}</td>`:''}
-        <td class="c${diff?' diff':''}">${it.qty}${diff?' *':''}</td>
+        <td class="c">${it.qty}</td>
         <td class="r">${fmtN(it.price*it.qty)}</td></tr>`;
     } else {
       rowsHTML+=`<tr${bg}>${'<td></td>'.repeat(cols).replace('<td></td>',`<td>${i+1}</td>`)}</tr>`;
@@ -1260,7 +1256,6 @@ function docHTML(inv, title, copyLabel){
       </tr></thead>
       <tbody>${rowsHTML}</tbody>
     </table>
-    ${anyDiff?'<div class="doc-tbl-note">* Delivered quantity differs from the ordered quantity.</div>':''}
 
     <div class="doc-totals">
       <div class="doc-trow"><span class="tl">Subtotal (LAK)</span><span class="tv">${fmtN(sub)}</span></div>
@@ -1419,6 +1414,7 @@ async function fetchSheetInvoices(params,label){
 function sheetChecks(s){
   const out=[];
   if(s.pending) out.push(['err','No invoice no. – run "Assign invoice numbers" in the sheet']);
+  if(s.duplicate) out.push(['err','Invoice no. used by another order – fix it in the sheet']);
   const delivered=s.lines.filter(l=>Number(l.delivered)>0);
   if(!delivered.length) out.push(['err','No delivered qty']);
   if(delivered.some(l=>!Number(l.unitPrice))) out.push(['err','Unit price missing']);

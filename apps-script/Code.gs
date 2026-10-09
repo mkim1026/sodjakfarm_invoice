@@ -40,6 +40,8 @@ function onOpen() {
  * Gives every row that has a delivery date but no invoice number a number.
  * Rows with the same delivery date + customer + PO share one number.
  * Format: 2026-TG-MMDD01, 02, … per delivery date. Existing numbers are never changed.
+ * A number is never issued twice: every number already in B2B Orders or in the Invoices
+ * tab (the register of issued invoices, kept even if order rows are deleted) is skipped.
  * Unit Price and Price Code of numbered rows are frozen (formula → value), so adding a
  * newer price code later doesn't alter issued invoices.
  */
@@ -54,15 +56,19 @@ function assignInvoiceNumbers() {
     if (last < 2) { SpreadsheetApp.getUi().alert('No orders found.'); return; }
     const values = sh.getRange(2, 1, last - 1, NUM_COLS).getValues();
 
+    const used = new Set(issuedNumbers_(ss));   // every number ever issued
     const seqByDay = {};   // "2026-TG-1009" -> highest sequence used
     const noByKey = {};    // "2026-10-09|Customer|PO" -> invoice no
     values.forEach(row => {
       const no = String(row[COL.INVOICE - 1] || '').trim();
       if (!no) return;
-      const m = no.match(/^(\d{4}-[A-Z]+-\d{4})(\d+)$/);
-      if (m) seqByDay[m[1]] = Math.max(seqByDay[m[1]] || 0, Number(m[2]));
+      used.add(no);
       const d = row[COL.DELIVERY_DATE - 1];
       if (d instanceof Date) noByKey[groupKey_(row, tz)] = no;
+    });
+    used.forEach(no => {
+      const m = no.match(/^(\d{4}-[A-Z]+-\d{4})(\d+)$/);
+      if (m) seqByDay[m[1]] = Math.max(seqByDay[m[1]] || 0, Number(m[2]));
     });
 
     // groups that still need a number, in sheet order
@@ -91,9 +97,11 @@ function assignInvoiceNumbers() {
         const d = first[COL.DELIVERY_DATE - 1];
         const day = Utilities.formatDate(d, tz, 'yyyy') + '-' + CONFIG.PREFIX + '-' +
                     Utilities.formatDate(d, tz, 'MMdd');
-        const seq = (seqByDay[day] || 0) + 1;
+        let seq = (seqByDay[day] || 0) + 1;
+        while (used.has(day + String(seq).padStart(2, '0'))) seq++;
         seqByDay[day] = seq;
         no = day + String(seq).padStart(2, '0');
+        used.add(no);
         noByKey[key] = no;
         newInvoices.push([no, d, first[COL.CUSTOMER - 1], first[COL.PO - 1]]);
       }
@@ -114,10 +122,41 @@ function assignInvoiceNumbers() {
     const msg = [];
     msg.push(assigned.length ? 'Assigned:\n' + assigned.join('\n') : 'Nothing to assign.');
     if (skipped.length) msg.push('\nSkipped:\n' + skipped.join('\n'));
+    const dups = duplicateNumbers_(sh.getRange(2, 1, last - 1, NUM_COLS).getValues(), tz, 90);
+    if (dups.length) {
+      msg.push('\n⚠ Same invoice number used for different orders – fix the Invoice No cell:\n' +
+               dups.map(d => `${d.no}: ${d.orders.join('  /  ')}`).join('\n'));
+    }
     SpreadsheetApp.getUi().alert(msg.join('\n'));
   } finally {
     lock.releaseLock();
   }
+}
+
+/** Numbers in the Invoices tab (column A). */
+function issuedNumbers_(ss) {
+  const sh = ss.getSheetByName(CONFIG.INVOICES);
+  if (!sh || sh.getLastRow() < 2) return [];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues()
+    .map(r => String(r[0] || '').trim()).filter(Boolean);
+}
+
+/**
+ * Invoice numbers shared by different orders (delivery date + customer + PO).
+ * recentDays limits the check to recent deliveries (0 = all).
+ */
+function duplicateNumbers_(values, tz, recentDays) {
+  const since = recentDays ? new Date(Date.now() - recentDays * 864e5) : null;
+  const keysByNo = {};
+  values.forEach(row => {
+    const no = String(row[COL.INVOICE - 1] || '').trim();
+    if (!no || !row[COL.CUSTOMER - 1]) return;
+    (keysByNo[no] = keysByNo[no] || {})[groupKey_(row, tz)] = row[COL.DELIVERY_DATE - 1];
+  });
+  return Object.keys(keysByNo)
+    .filter(no => Object.keys(keysByNo[no]).length > 1)
+    .filter(no => !since || Object.values(keysByNo[no]).some(d => d instanceof Date && d >= since))
+    .map(no => ({ no, orders: Object.keys(keysByNo[no]).map(k => k.replace(/\|/g, ' ').trim()) }));
 }
 
 function appendInvoices_(ss, rows) {
@@ -200,9 +239,11 @@ function buildInvoices_(filter) {
     });
   }
 
+  const all = readOrders_(ss);
+  const dupNos = new Set(duplicateNumbers_(all, tz, 0).map(d => d.no));
   const groups = {};
   const order = [];
-  readOrders_(ss).forEach(row => {
+  all.forEach(row => {
     const customer = String(row[COL.CUSTOMER - 1] || '').trim();
     if (!customer || !row[COL.PRODUCT - 1]) return;
     const d = row[COL.DELIVERY_DATE - 1];
@@ -218,6 +259,7 @@ function buildInvoices_(filter) {
       groups[key] = {
         no: no || null,
         pending: !no,
+        duplicate: dupNos.has(no),
         customer: customer,
         billTo: c['Bill To (on invoice)'] || customer,
         mobile: str_(c['Mobile']),
